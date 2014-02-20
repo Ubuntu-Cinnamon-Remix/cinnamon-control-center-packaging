@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+
+# binary-post-install/cinnamon-control-center-data::
+#	rm -rf debian/cinnamon-capplets-data/usr/share/applications/mimeinfo.cache
+#	rm -rf debian/cinnamon-capplets-data/usr/share/pkgconfig
+#	dh_installmime -p$(cdbs_curpkg)
+
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --parallel --with=autoreconf,gir,gnome
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+	    --disable-scrollkeeper \
+	    --disable-ibus \
+	    --disable-update-mimedb \
+	    --with-clutter
+
+override_dh_strip:
+	dh_strip --dbg-package=cinnamon-control-center-dbg
+
+override_dh_install:
+	dh_install --list-missing
+
+run_dh_acc:
+	# The package needs to be installed (@ in autopkgtest)
+	for in_file in debian/*.acc.in; do \
+	    out_file=$${in_file%.in}; \
+	    sed 's/\$${DEB_HOST_MULTIARCH}/'"$(DEB_HOST_MULTIARCH)"'/' \
+		"$${in_file}" > "$${out_file}"; \
+	done
+
+	dh_acc
