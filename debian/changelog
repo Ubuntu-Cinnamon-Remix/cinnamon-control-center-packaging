@@ -1,5 +1,5 @@
-cinnamon-control-center (2.0.9-1) UNRELEASED; urgency=medium
+cinnamon-control-center (2.0.9-1~) UNRELEASED; urgency=medium
 
   * Initial release.
 
- -- Maximiliano Curia <maxy@debian.org>  Thu, 20 Feb 2014 14:29:17 +0100
+ -- Maximiliano Curia <maxy@debian.org>  Fri, 21 Feb 2014 10:47:52 +0100
