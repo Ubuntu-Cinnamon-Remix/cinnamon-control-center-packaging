@@ -28,18 +28,19 @@
 
 #include "cc-power-panel.h"
 
-#define WID(b, w) (GtkWidget *) gtk_builder_get_object (b, w)
-
 CC_PANEL_REGISTER (CcPowerPanel, cc_power_panel)
 
 #define POWER_PANEL_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), CC_TYPE_POWER_PANEL, CcPowerPanelPrivate))
 
+#define WID(s) GTK_WIDGET (gtk_builder_get_object (priv->builder, s))
+#define SWID(s) GTK_WIDGET (gtk_builder_get_object (self->priv->builder, s))
+#define LS(s) GTK_LIST_STORE (gtk_builder_get_object (self->priv->builder, s))
+
 struct _CcPowerPanelPrivate
 {
-  GSettings     *lock_settings;
   GSettings     *csd_settings;
-  GSettings     *power_settings;
+  GSettings     *session_settings;
   GCancellable  *cancellable;
   GtkBuilder    *builder;
   GDBusProxy    *proxy;
@@ -90,10 +91,10 @@ cc_power_panel_dispose (GObject *object)
       g_object_unref (priv->csd_settings);
       priv->csd_settings = NULL;
     }
-  if (priv->power_settings)
+  if (priv->session_settings)
     {
-      g_object_unref (priv->power_settings);
-      priv->power_settings = NULL;
+      g_object_unref (priv->session_settings);
+      priv->session_settings = NULL;
     }
   if (priv->cancellable != NULL)
     {
@@ -118,13 +119,6 @@ cc_power_panel_dispose (GObject *object)
     }
 
   G_OBJECT_CLASS (cc_power_panel_parent_class)->dispose (object);
-}
-
-static void
-on_lock_settings_changed (GSettings     *settings,
-                          const char    *key,
-                          CcPowerPanel *panel)
-{
 }
 
 static const char *
@@ -221,8 +215,7 @@ set_device_battery_primary (CcPowerPanel *panel, GVariant *device)
                            percentage / 100.0f);
 
   /* clear the warning */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "image_primary_warning"));
+  widget = WID ("image_primary_warning");
   gtk_widget_hide (widget);
 
   /* set the description */
@@ -290,18 +283,15 @@ set_device_battery_primary (CcPowerPanel *panel, GVariant *device)
     }
   if (details == NULL)
     goto out;
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "label_battery_primary"));
+  widget = WID ("label_battery_primary");
   gtk_label_set_label (GTK_LABEL (widget), details);
 
   /* show the primary device */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_primary"));
+  widget = WID ("box_primary");
   gtk_widget_show (widget);
 
   /* hide the addon device until we stumble upon the device */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_battery_addon"));
+  widget = WID ("box_battery_addon");
   gtk_widget_hide (widget);
 out:
   g_free (time_string);
@@ -334,8 +324,7 @@ set_device_ups_primary (CcPowerPanel *panel, GVariant *device)
                            percentage / 100.0f);
 
   /* always show the warning */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "image_primary_warning"));
+  widget = WID ("image_primary_warning");
   gtk_widget_show (widget);
 
   /* set the description */
@@ -388,18 +377,15 @@ set_device_ups_primary (CcPowerPanel *panel, GVariant *device)
     }
   if (details == NULL)
     goto out;
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "label_battery_primary"));
+  widget = WID ("label_battery_primary");
   gtk_label_set_label (GTK_LABEL (widget), details);
 
   /* show the primary device */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_primary"));
+  widget = WID ("box_primary");
   gtk_widget_show (widget);
 
   /* hide the addon device as extra UPS devices are not possible */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_battery_addon"));
+  widget = WID ("box_battery_addon");
   gtk_widget_hide (widget);
 out:
   g_free (time_string);
@@ -440,13 +426,11 @@ set_device_battery_additional (CcPowerPanel *panel, GVariant *device)
     }
   if (details == NULL)
     goto out;
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "label_battery_addon"));
+  widget = WID ("label_battery_addon");
   gtk_label_set_label (GTK_LABEL (widget), details);
 
   /* show the addon device */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_battery_addon"));
+  widget = WID ("box_battery_addon");
   gtk_widget_show (widget);
 out:
   g_free (details);
@@ -618,8 +602,7 @@ add_device_secondary (CcPowerPanel *panel,
   gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
 
   /* add to the grid */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "grid_secondary"));
+  widget = WID ("grid_secondary");
 
   /* two devices wide */
   gtk_grid_attach (GTK_GRID (widget), hbox,
@@ -629,8 +612,7 @@ add_device_secondary (CcPowerPanel *panel,
   (*secondary_devices_cnt)++;
 
   /* show panel */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_secondary"));
+  widget = WID ("box_secondary");
   gtk_widget_show_all (widget);
 
   g_string_free (description, TRUE);
@@ -668,19 +650,16 @@ get_devices_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
   priv = panel->priv;
 
   /* empty the secondary box */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "grid_secondary"));
+  widget = WID ("grid_secondary");
   children = gtk_container_get_children (GTK_CONTAINER (widget));
   for (l = children; l != NULL; l = l->next)
     gtk_container_remove (GTK_CONTAINER (widget), l->data);
   g_list_free (children);
 
   /* hide both panels initially */
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_primary"));
+  widget = WID ("box_primary");
   gtk_widget_hide (widget);
-  widget = GTK_WIDGET (gtk_builder_get_object (priv->builder,
-                                               "box_secondary"));
+  widget = WID ("box_secondary");
   gtk_widget_hide (widget);
 
   if (result == NULL)
@@ -839,6 +818,30 @@ combo_time_changed_cb (GtkWidget *widget, CcPowerPanel *self)
 }
 
 static void
+combo_session_time_changed_cb (GtkWidget *widget, CcPowerPanel *self)
+{
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  guint value;
+  gboolean ret;
+  const gchar *key = (const gchar *)g_object_get_data (G_OBJECT(widget), "_gsettings_key");
+
+  /* no selection */
+  ret = gtk_combo_box_get_active_iter (GTK_COMBO_BOX(widget), &iter);
+  if (!ret)
+    return;
+
+  /* get entry */
+  model = gtk_combo_box_get_model (GTK_COMBO_BOX(widget));
+  gtk_tree_model_get (model, &iter,
+                      1, &value,
+                      -1);
+
+  /* set both keys */
+  g_settings_set_uint (self->priv->session_settings, key, value);
+}
+
+static void
 combo_enum_changed_cb (GtkWidget *widget, CcPowerPanel *self)
 {
   GtkTreeIter iter;
@@ -978,14 +981,17 @@ set_ac_battery_ui_mode (CcPowerPanel *self)
 {
   gboolean has_batteries = FALSE;
   gboolean has_lid = FALSE;
+#if ! UP_CHECK_VERSION(0,99,0)
   gboolean ret;
   GError *error = NULL;
+#endif
   GPtrArray *devices;
   guint i;
   UpDevice *device;
   UpDeviceKind kind;
   CcPowerPanelPrivate *priv = self->priv;
 
+#if ! UP_CHECK_VERSION(0,99,0)
   /* this is sync, but it's cached in the daemon and so quick */
   ret = up_client_enumerate_devices_sync (self->priv->up_client, NULL, &error);
   if (!ret)
@@ -994,6 +1000,7 @@ set_ac_battery_ui_mode (CcPowerPanel *self)
       g_error_free (error);
       goto out;
     }
+#endif
 
   devices = up_client_get_devices (self->priv->up_client);
   for (i=0; i<devices->len; i++)
@@ -1013,15 +1020,46 @@ set_ac_battery_ui_mode (CcPowerPanel *self)
 
   has_lid = up_client_get_lid_is_present (self->priv->up_client);
 
+#if ! UP_CHECK_VERSION(0,99,0)
 out:
-  gtk_widget_set_visible (WID (priv->builder, "combobox_lid_ac"), has_lid);
-  gtk_widget_set_visible (WID (priv->builder, "label_lid_action"), has_lid);
-  gtk_widget_set_visible (WID (priv->builder, "combobox_lid_battery"), has_batteries && has_lid);    
-  gtk_widget_set_visible (WID (priv->builder, "label_header_battery"), has_batteries);
-  gtk_widget_set_visible (WID (priv->builder, "label_header_ac"), has_batteries);
-  gtk_widget_set_visible (WID (priv->builder, "combobox_sleep_battery"), has_batteries);
-  gtk_widget_set_visible (WID (priv->builder, "label_critical"), has_batteries);
-  gtk_widget_set_visible (WID (priv->builder, "combobox_critical"), has_batteries);
+#endif	  
+  if (has_lid) { 
+  	gtk_widget_show(WID("combobox_lid_ac"));
+  	gtk_widget_show(WID("label_lid_action"));
+  }
+  else {
+  	gtk_widget_hide (WID("combobox_lid_ac"));
+  	gtk_widget_hide (WID("label_lid_action"));
+  }
+
+  if (has_batteries) {
+  	gtk_widget_show (WID("label_header_battery"));
+  	gtk_widget_show (WID("label_header_ac"));
+  	gtk_widget_show (WID("combobox_sleep_battery"));
+  	gtk_widget_show (WID("combobox_display_battery"));
+  	gtk_widget_show (WID("label_critical"));
+  	gtk_widget_show (WID("combobox_critical"));
+  	gtk_widget_show (WID("separator_indicator"));
+    gtk_widget_show (WID("frame_battery"));
+  }
+  else {
+  	gtk_widget_hide (WID("label_header_battery"));
+  	gtk_widget_hide (WID("label_header_ac"));
+  	gtk_widget_hide (WID("combobox_sleep_battery"));
+  	gtk_widget_hide (WID("combobox_display_battery"));
+  	gtk_widget_hide (WID("label_critical"));
+  	gtk_widget_hide (WID("combobox_critical"));
+  	gtk_widget_hide (WID("separator_indicator"));
+    gtk_widget_hide (WID("frame_battery"));
+  }
+
+  if (has_lid && has_batteries) {
+  	gtk_widget_show (WID("combobox_lid_battery"));
+  }
+  else {
+  	gtk_widget_hide (WID("combobox_lid_battery"));	
+  }
+	  
 }
 
 static void
@@ -1048,9 +1086,15 @@ cc_power_panel_init (CcPowerPanel *self)
       return;
     }
 
+  /* Make sure to set liststores (glade likes removing them from Gtk.ComboBoxText items in the .ui file....) */
+  gtk_combo_box_set_model (GTK_COMBO_BOX(SWID("combobox_display_ac")), LS("liststore_display"));
+  gtk_combo_box_set_model (GTK_COMBO_BOX(SWID("combobox_display_battery")), LS("liststore_display"));
+  gtk_combo_box_set_model (GTK_COMBO_BOX(SWID("combobox_sleep_ac")), LS("liststore_suspend"));
+  gtk_combo_box_set_model (GTK_COMBO_BOX(SWID("combobox_sleep_battery")), LS("liststore_suspend"));
+  gtk_combo_box_set_model (GTK_COMBO_BOX(SWID("combobox_session_idle")), LS("liststore_session"));
+
   /* add levelbar */
-  self->priv->levelbar_primary = GTK_WIDGET
-    (gtk_builder_get_object (self->priv->builder, "levelbar_primary"));
+  self->priv->levelbar_primary = SWID("levelbar_primary");
   self->priv->cancellable = g_cancellable_new ();
 
   /* get initial icon state */
@@ -1070,33 +1114,45 @@ cc_power_panel_init (CcPowerPanel *self)
   set_ac_battery_ui_mode (self);
 
   self->priv->csd_settings = g_settings_new ("org.cinnamon.settings-daemon.plugins.power");
-  g_signal_connect (self->priv->csd_settings,
-                    "changed",
-                    G_CALLBACK (on_lock_settings_changed),
-                    self);
+  self->priv->session_settings = g_settings_new ("org.cinnamon.desktop.session");
+
+
+  /* Session idle time */
+  value = g_settings_get_uint (self->priv->session_settings, "idle-delay");
+  widget = SWID("combobox_session_idle");
+  set_value_for_combo (GTK_COMBO_BOX (widget), value);
+  g_object_set_data (G_OBJECT(widget), "_gsettings_key", "idle-delay");
+  g_signal_connect (widget, "changed", G_CALLBACK (combo_session_time_changed_cb), self);
+
+  /* auto-display-off time */
+  value = g_settings_get_int (self->priv->csd_settings, "sleep-display-ac");
+  widget = SWID("combobox_display_ac");
+  set_value_for_combo (GTK_COMBO_BOX (widget), value);
+  g_object_set_data (G_OBJECT(widget), "_gsettings_key", "sleep-display-ac");
+  g_signal_connect (widget, "changed", G_CALLBACK (combo_time_changed_cb), self);
+
+  value = g_settings_get_int (self->priv->csd_settings, "sleep-display-battery");
+  widget = SWID("combobox_display_battery");
+  set_value_for_combo (GTK_COMBO_BOX (widget), value);
+  g_object_set_data (G_OBJECT(widget), "_gsettings_key", "sleep-display-battery");
+  g_signal_connect (widget, "changed", G_CALLBACK (combo_time_changed_cb), self);
 
   /* auto-sleep time */
   value = g_settings_get_int (self->priv->csd_settings, "sleep-inactive-ac-timeout");
-  widget = GTK_WIDGET (gtk_builder_get_object (self->priv->builder,
-                                               "combobox_sleep_ac"));
+  widget = SWID("combobox_sleep_ac");
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT(widget), "_gsettings_key", "sleep-inactive-ac-timeout");
-  g_signal_connect (widget, "changed",
-                    G_CALLBACK (combo_time_changed_cb),
-                    self);
+  g_signal_connect (widget, "changed", G_CALLBACK (combo_time_changed_cb), self);
+
   value = g_settings_get_int (self->priv->csd_settings, "sleep-inactive-battery-timeout");
-  widget = GTK_WIDGET (gtk_builder_get_object (self->priv->builder,
-                                               "combobox_sleep_battery"));
+  widget = SWID("combobox_sleep_battery");
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT(widget), "_gsettings_key", "sleep-inactive-battery-timeout");
-  g_signal_connect (widget, "changed",
-                    G_CALLBACK (combo_time_changed_cb),
-                    self);
+  g_signal_connect (widget, "changed", G_CALLBACK (combo_time_changed_cb), self);
 
   /* actions */
   value = g_settings_get_enum (self->priv->csd_settings, "critical-battery-action");
-  widget = GTK_WIDGET (gtk_builder_get_object (self->priv->builder,
-                                               "combobox_critical"));
+  widget = SWID("combobox_critical");
   disable_unavailable_combo_items (self, GTK_COMBO_BOX (widget));
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT(widget), "_gsettings_key", "critical-battery-action");
@@ -1105,8 +1161,7 @@ cc_power_panel_init (CcPowerPanel *self)
                     self);
 
   value = g_settings_get_enum (self->priv->csd_settings, "lid-close-ac-action");
-  widget = GTK_WIDGET (gtk_builder_get_object (self->priv->builder,
-                                               "combobox_lid_ac"));
+  widget = SWID("combobox_lid_ac");
   disable_unavailable_combo_items (self, GTK_COMBO_BOX (widget));
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT(widget), "_gsettings_key", "lid-close-ac-action");
@@ -1115,8 +1170,7 @@ cc_power_panel_init (CcPowerPanel *self)
                     self);
 
   value = g_settings_get_enum (self->priv->csd_settings, "lid-close-battery-action");
-  widget = GTK_WIDGET (gtk_builder_get_object (self->priv->builder,
-                                               "combobox_lid_battery"));
+  widget = SWID("combobox_lid_battery");
   disable_unavailable_combo_items (self, GTK_COMBO_BOX (widget));
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT(widget), "_gsettings_key", "lid-close-battery-action");
@@ -1124,16 +1178,11 @@ cc_power_panel_init (CcPowerPanel *self)
                     G_CALLBACK (combo_enum_changed_cb),
                     self);
 
-  widget = WID (self->priv->builder, "vbox_power");
+  widget = SWID ("vbox_power");
   gtk_widget_reparent (widget, (GtkWidget *) self);
 
-
-
-  gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (self->priv->builder, "label_indicator")));
-  gtk_widget_hide (GTK_WIDGET (gtk_builder_get_object (self->priv->builder, "combobox_indicator")));
-
   value = g_settings_get_enum (self->priv->csd_settings, "button-power");
-  widget = WID (self->priv->builder, "combobox_power_button");
+  widget = SWID ("combobox_power_button");
   disable_unavailable_combo_items (self, GTK_COMBO_BOX (widget));
   set_value_for_combo (GTK_COMBO_BOX (widget), value);
   g_object_set_data (G_OBJECT (widget), "_gsettings_key", "button-power");

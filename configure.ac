@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 2.0.9)
+m4_define([cinnamon_control_center_version], 2.2.3)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=cinnamon-control-center])
 
@@ -87,7 +87,7 @@ dnl Check that we meet the  dependencies
 dnl ==============================================
 
 GLIB_REQUIRED_VERSION=2.31.0
-GTK_REQUIRED_VERSION=3.4.2
+GTK_REQUIRED_VERSION=3.4.1
 PA_REQUIRED_VERSION=1.1
 CANBERRA_REQUIRED_VERSION=0.13
 GDKPIXBUF_REQUIRED_VERSION=2.23.0
@@ -98,6 +98,7 @@ LIBNOTIFY_REQUIRED_VERSION=0.7.3
 CINNAMON_DESKTOP_REQUIRED_VERSION=1.0.0
 CLUTTER_REQUIRED_VERSION=1.11.3
 CSD_REQUIRED_VERSION=1.0.0
+LIBWACOM_REQUIRED_VERSION=0.7
 
 COMMON_MODULES="gtk+-3.0 >= $GTK_REQUIRED_VERSION
  glib-2.0 >= $GLIB_REQUIRED_VERSION
@@ -110,8 +111,11 @@ COMMON_MODULES="gtk+-3.0 >= $GTK_REQUIRED_VERSION
 PKG_CHECK_MODULES(LIBCINNAMON_CONTROL_CENTER, $COMMON_MODULES)
 PKG_CHECK_MODULES(LIBLANGUAGE, $COMMON_MODULES cinnamon-desktop fontconfig)
 PKG_CHECK_MODULES(LIBSHORTCUTS, $COMMON_MODULES x11)
-PKG_CHECK_MODULES(SHELL, $COMMON_MODULES libgnome-menu-3.0 gio-unix-2.0 x11)
+PKG_CHECK_MODULES(SHELL, $COMMON_MODULES libcinnamon-menu-3.0 gio-unix-2.0 x11)
 PKG_CHECK_MODULES(BACKGROUND_PANEL, $COMMON_MODULES libxml-2.0 cinnamon-desktop
+                  gdk-pixbuf-2.0 >= $GDKPIXBUF_REQUIRED_VERSION)
+PKG_CHECK_MODULES(DATETIME_PANEL, $COMMON_MODULES dbus-glib-1
+                  polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION
                   gdk-pixbuf-2.0 >= $GDKPIXBUF_REQUIRED_VERSION)
 PKG_CHECK_MODULES(DISPLAY_PANEL, $COMMON_MODULES cinnamon-desktop x11)
 PKG_CHECK_MODULES(MEDIA_PANEL, $COMMON_MODULES)
@@ -130,16 +134,10 @@ PKG_CHECK_MODULES(SOUND_PANEL, $COMMON_MODULES libxml-2.0
                   libpulse-mainloop-glib >= $PA_REQUIRED_VERSION)
 PKG_CHECK_MODULES(UNIVERSAL_ACCESS_PANEL, $COMMON_MODULES)
 
-# Check for NetworkManager ~0.9
 PKG_CHECK_MODULES(NETWORK_MANAGER, NetworkManager >= $NETWORK_MANAGER_REQUIRED_VERSION
                   libnm-glib >= $NETWORK_MANAGER_REQUIRED_VERSION
                   libnm-util >= $NETWORK_MANAGER_REQUIRED_VERSION
-		  libnm-gtk >= $NETWORK_MANAGER_REQUIRED_VERSION,
-                  [have_networkmanager=yes], have_networkmanager=no)
-if test "x$have_networkmanager" = xno ; then
-        AC_MSG_WARN(*** Network panel will not be built (NetworkManager ~0.9 or newer not found) ***)
-fi
-AM_CONDITIONAL(BUILD_NETWORK, [test x$have_networkmanager = xyes])
+		  libnm-gtk >= $NETWORK_MANAGER_REQUIRED_VERSION)
 
 # Check for libnm-gtk + 0.9.9.0
 PKG_CHECK_MODULES(LIBNM_GTK_COMPAT, libnm-gtk >= $LIBNM_GTK_REQUIRED_VERSION
@@ -184,25 +182,21 @@ if test x"$enable_cups" != x"no" ; then
   AC_SUBST(CUPS_LIBS)
 fi
 
+build_wacom=false
+PKG_CHECK_MODULES(WACOM_PANEL, [$COMMON_MODULES
+                  cinnamon-settings-daemon >= $CSD_REQUIRED_VERSION
+                  xi >= 1.2 x11 libwacom >= $LIBWACOM_REQUIRED_VERSION
+                  cinnamon-desktop
+                  gtk+-3.0 >= 3.8.0],
+                  [build_wacom="true" AC_DEFINE(HAVE_WACOM, 1, [Define if wacom is being build])], [build_wacom="false"])
+
+AM_CONDITIONAL(BUILD_WACOM, test "x$build_wacom" = "xtrue")
+
 # This is a hard-dependency for the region and user-accounts panels
 PKG_CHECK_MODULES(ISOCODES, iso-codes)
 
 AC_DEFINE_UNQUOTED([ISO_CODES_PREFIX],["`$PKG_CONFIG --variable=prefix iso-codes`"],[ISO codes prefix])
 ISO_CODES=iso-codes
-
-# Kerberos kerberos support
-AC_PATH_PROG(KRB5_CONFIG, krb5-config, no)
-if test "$KRB5_CONFIG" = "no"; then
-  AC_MSG_ERROR([krb5-config executable not found in your path - should be installed with the kerberos libraries])
-fi
-
-AC_MSG_CHECKING(for krb5 libraries and flags)
-KRB5_CFLAGS="`$KRB5_CONFIG --cflags`"
-KRB5_LIBS="`$KRB5_CONFIG --libs`"
-AC_MSG_RESULT($KRB5_CFLAGS $KRB5_LIBS)
-
-AC_SUBST(KRB5_CFLAGS)
-AC_SUBST(KRB5_LIBS)
 
 dnl ==============================================
 dnl End: Check that we meet the  dependencies
@@ -393,6 +387,12 @@ panels/power/icons/24x24/Makefile
 panels/power/icons/32x32/Makefile
 panels/power/icons/48x48/Makefile
 panels/power/icons/256x256/Makefile
+panels/wacom/Makefile
+panels/wacom/calibrator/Makefile
+panels/wacom/cinnamon-wacom-panel.desktop.in
+panels/datetime/Makefile
+panels/datetime/cinnamon-datetime-panel.desktop.in
+panels/datetime/po-timezones/Makefile
 po/Makefile.in
 files/Makefile
 shell/Makefile
@@ -405,11 +405,6 @@ if test "x$have_networkmanager" = "xyes"; then
 else
 	AC_MSG_NOTICE([   Network panel disabled])
 fi
-if test "x$have_cheese" = "xyes"; then
-	AC_MSG_NOTICE([** Cheese (Users panel webcam support)])
-else
-	AC_MSG_NOTICE([   Users panel webcam support disabled])
-fi
 if test "x$with_libsocialweb" = "xyes"; then
 	AC_MSG_NOTICE([** libsocialweb (Background panel Flickr support)])
 else
@@ -420,11 +415,9 @@ if test "x$with_systemd" = "xyes"; then
 else
 	AC_MSG_NOTICE([   Using ConsoleKit for session tracking])
 fi
-if test "x$have_cheese" = "xyes"; then
-    AC_MSG_NOTICE([** Cheese (Users panel webcam support)])
-else
-    AC_MSG_NOTICE([   Users panel webcam support disabled])
-fi
+
+AC_MSG_NOTICE([   Wacom support:  $build_wacom])
+
 if test "x$enable_ibus" == "xyes"; then
 	AC_MSG_NOTICE([** IBus (Region panel IBus support)])
 else
