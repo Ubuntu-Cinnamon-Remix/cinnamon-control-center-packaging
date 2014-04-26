@@ -2,6 +2,7 @@ Source: cinnamon-control-center
 Section: x11
 Priority: optional
 Maintainer: Maximiliano Curia <maxy@debian.org>
+Uploaders: Margarita Manterola <marga@debian.org>
 Build-Depends: autotools-dev,
                cinnamon-settings-daemon,
                cinnamon-settings-daemon-dev,

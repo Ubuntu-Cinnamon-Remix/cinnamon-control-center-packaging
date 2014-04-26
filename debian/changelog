@@ -1,10 +1,11 @@
-cinnamon-control-center (2.2.3-1) UNRELEASED; urgency=medium
+cinnamon-control-center (2.2.3-1~) UNRELEASED; urgency=medium
 
   [ Maximiliano Curia ]
   * Initial release (Closes #745911).
   * Add abi-compliance-checker info.
 
   [ Margarita Manterola ]
-  * New upstream release.
+  * New upstream release 2.2.3.
+  * Add myself to uploaders
 
  -- Margarita Manterola <marga@debian.org>  Sat, 26 Apr 2014 23:16:49 +0200
