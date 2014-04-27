@@ -1,7 +1,7 @@
 cinnamon-control-center (2.2.3-1~) UNRELEASED; urgency=medium
 
   [ Maximiliano Curia ]
-  * Initial release (Closes #745911).
+  * Initial release (Closes: #745911).
   * Add abi-compliance-checker info.
 
   [ Margarita Manterola ]

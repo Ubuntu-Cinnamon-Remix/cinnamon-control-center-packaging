@@ -97,7 +97,8 @@ Architecture: any
 Section: libdevel
 Depends: libcinnamon-control-center1 (= ${binary:Version}), ${misc:Depends}
 Description: utilities to configure the Cinnamon desktop
- This package contains the files needed to build Control Center panels
+ This package contains the development files for the cinnamon control center
+ panels library.
 
 Package: libcinnamon-control-center1
 Architecture: any
@@ -106,7 +107,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: utilities to configure the Cinnamon desktop
- This package contains the library used by Control Center panels
+ This package contains the library used by control center panels
 
 Package: cinnamon-control-center-dbg
 Priority: extra
