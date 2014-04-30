@@ -48,8 +48,8 @@ Build-Depends: autotools-dev,
                shared-mime-info
 Standards-Version: 3.9.5
 Homepage: http://cinnamon.linuxmint.com/
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/cinnamon/cinnamon-control-center.git
-Vcs-Git: git://anonscm.debian.org/collab-maint/cinnamon/cinnamon-control-center.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cinnamon/cinnamon-control-center.git
+Vcs-Git: git://anonscm.debian.org/pkg-cinnamon/cinnamon-control-center.git
 
 Package: cinnamon-control-center
 Architecture: any
