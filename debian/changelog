@@ -5,6 +5,7 @@ cinnamon-control-center (2.2.7-1~) UNRELEASED; urgency=medium
   * Add abi-compliance-checker info.
   * Update VCS fields.
   * Update copyright information.
+  * Update install files.
 
   [ Margarita Manterola ]
   * Add myself to uploaders
