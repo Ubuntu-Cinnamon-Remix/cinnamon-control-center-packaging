@@ -1,20 +1,13 @@
 cinnamon-control-center (2.2.7-1) UNRELEASED; urgency=medium
 
-  * Update VCS fields.
-  * New upstream release.
-
- -- Maximiliano Curia <maxy@debian.org>  Thu, 15 May 2014 16:49:47 +0200
-
-cinnamon-control-center (2.2.3-1) experimental; urgency=medium
-
   [ Maximiliano Curia ]
   * Initial release (Closes: #745911).
   * Add abi-compliance-checker info.
+  * Update VCS fields.
 
   [ Margarita Manterola ]
-  * New upstream release 2.2.3.
   * Add myself to uploaders
   * Remove obsolete patch 12_add_never_turn_screen_off.patch
   * Moved gnome-menu dependency to cinnamon-menu.
 
- -- Margarita Manterola <marga@debian.org>  Mon, 28 Apr 2014 22:27:11 +0200
+ -- Margarita Manterola <marga@debian.org>  Fri, 16 May 2014 09:21:49 +0200
