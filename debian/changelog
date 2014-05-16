@@ -1,4 +1,4 @@
-cinnamon-control-center (2.2.7-1) UNRELEASED; urgency=medium
+cinnamon-control-center (2.2.7-1~) UNRELEASED; urgency=medium
 
   [ Maximiliano Curia ]
   * Initial release (Closes: #745911).
@@ -11,4 +11,4 @@ cinnamon-control-center (2.2.7-1) UNRELEASED; urgency=medium
   * Remove obsolete patch 12_add_never_turn_screen_off.patch
   * Moved gnome-menu dependency to cinnamon-menu.
 
- -- Margarita Manterola <marga@debian.org>  Fri, 16 May 2014 09:21:49 +0200
+ -- Maximiliano Curia <maxy@debian.org>  Fri, 16 May 2014 16:47:58 +0200
