@@ -5,6 +5,7 @@ cinnamon-control-center (2.2.9-1~) UNRELEASED; urgency=medium
 
   [ Maximiliano Curia ]
   * Remove hardening-wrapper as a build dependency.
+  * Remove debian/copyright spurious line.
 
  -- Margarita Manterola <marga@debian.org>  Thu, 29 May 2014 16:31:20 +0200
 

@@ -3,7 +3,6 @@ Upstream-Name: cinnamon-control-center
 Upstream-Contact: Linux Mint Project <root@linuxmint.com>
 Source: https://github.com/linuxmint/cinnamon-control-center.git
 
-panels/color/cc-color-panel.c
 Files: *
 Copyright: 2008-2012, Bastien Nocera <hadess@hadess.net>
            2009-2012, Canonical Ltd
