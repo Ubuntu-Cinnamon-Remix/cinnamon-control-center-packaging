@@ -1,0 +1,13 @@
+Index: cinnamon-control-center/configure.ac
+===================================================================
+--- cinnamon-control-center.orig/configure.ac	2014-06-02 12:30:54.297483050 +0200
++++ cinnamon-control-center/configure.ac	2014-06-23 15:39:56.646267281 +0200
+@@ -8,7 +8,7 @@
+ 
+ AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
+ AM_MAINTAINER_MODE([enable])
+-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
++m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([no])])
+ 
+ # Check for programs
+ AC_PROG_CC
