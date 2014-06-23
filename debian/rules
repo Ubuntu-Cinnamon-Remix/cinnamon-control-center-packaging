@@ -1,10 +1,7 @@
 #!/usr/bin/make -f
 
-# binary-post-install/cinnamon-control-center-data::
-#	rm -rf debian/cinnamon-capplets-data/usr/share/applications/mimeinfo.cache
-#	rm -rf debian/cinnamon-capplets-data/usr/share/pkgconfig
-#	dh_installmime -p$(cdbs_curpkg)
-
+export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
+export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
@@ -41,5 +38,4 @@ run_dh_acc:
 	    sed 's/\$${DEB_HOST_MULTIARCH}/'"$(DEB_HOST_MULTIARCH)"'/' \
 		"$${in_file}" > "$${out_file}"; \
 	done
-
 	dh_acc
