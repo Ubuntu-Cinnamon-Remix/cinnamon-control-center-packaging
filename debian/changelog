@@ -8,6 +8,7 @@ cinnamon-control-center (2.2.9-1~) UNRELEASED; urgency=medium
   * Remove debian/copyright spurious line.
   * Add hardening=+all build options
   * New patch: disable_silent_builds
+  * Add missing icon for the menu file.
 
  -- Margarita Manterola <marga@debian.org>  Thu, 29 May 2014 16:31:20 +0200
 
