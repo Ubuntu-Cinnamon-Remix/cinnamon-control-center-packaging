@@ -29,16 +29,12 @@ Copyright: 2008-2012, Bastien Nocera <hadess@hadess.net>
 License: GPL-2+
 
 Files: panels/sound/data/icons/32x32/apps/cin-multimedia-volume-control.svg
-       panels/sound/data/icons/32x32/apps/cin-multimedia-volume-control.svg
-       panels/sound/data/icons/scalable/apps/cin-multimedia-volume-control.svg
        panels/sound/data/icons/scalable/apps/cin-multimedia-volume-control.svg
        panels/sound/data/icons/22x22/apps/cin-multimedia-volume-control.svg
-       panels/sound/data/icons/22x22/apps/cin-multimedia-volume-control.svg
-       panels/sound/data/icons/16x16/apps/cin-multimedia-volume-control.svg
        panels/sound/data/icons/16x16/apps/cin-multimedia-volume-control.svg
        panels/display/icons/scalable/cinnamon-preferences-desktop-display.svg
-       panels/display/icons/scalable/cinnamon-preferences-desktop-display.svg
-Copyright: 2013, Michael Webster <miketwebster@gmail.com>
+Copyright: 2007, Josef vybíral
+           Jakub Steiner
 License: GPL-2
 
 Files: panels/display/cc-rr-labeler.c
