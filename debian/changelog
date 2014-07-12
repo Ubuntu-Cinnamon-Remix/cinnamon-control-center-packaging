@@ -1,16 +1,13 @@
-cinnamon-control-center (2.2.10-2) experimental; urgency=medium
-
-  * Added patch to expect translations in the standard path.
-
- -- Margarita Manterola <marga@debian.org>  Sat, 12 Jul 2014 13:58:28 +0200
-
 cinnamon-control-center (2.2.10-1) experimental; urgency=medium
 
   [ Fabio Fantoni ]
   * New upstream release.
   * debian/copyright: fixed license of some svg files.
 
- -- Margarita Manterola <marga@debian.org>  Sat, 12 Jul 2014 12:32:10 +0200
+  [ Margarita Manterola ]
+  * Added patch to expect translations in the standard path.
+
+ -- Margarita Manterola <marga@debian.org>  Sat, 12 Jul 2014 13:58:28 +0200
 
 cinnamon-control-center (2.2.9-1) experimental; urgency=medium
 
