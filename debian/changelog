@@ -1,8 +1,8 @@
-cinnamon-control-center (2.2.10-2~) UNRELEASED; urgency=medium
+cinnamon-control-center (2.2.10-2) experimental; urgency=medium
 
   * Added patch to expect translations in the standard path.
 
- -- Margarita Manterola <marga@debian.org>  Sat, 12 Jul 2014 13:47:36 +0200
+ -- Margarita Manterola <marga@debian.org>  Sat, 12 Jul 2014 13:58:28 +0200
 
 cinnamon-control-center (2.2.10-1) experimental; urgency=medium
 
