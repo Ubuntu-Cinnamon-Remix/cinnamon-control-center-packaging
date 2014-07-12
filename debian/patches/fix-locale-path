@@ -1,0 +1,335 @@
+Description: Fix code to expect translation files in the standard folder
+Author: Margarita Manterola <marga@debian.org>
+Origin: vendor
+Forwarded: no
+Applied-Upstream: no
+Last-Update: 2014-07-12
+Index: cinnamon-control-center/generate_additional_files.py
+===================================================================
+--- cinnamon-control-center.orig/generate_additional_files.py	2014-05-24 15:42:54.540780183 +0200
++++ cinnamon-control-center/generate_additional_files.py	2014-07-12 13:41:39.522538086 +0200
+@@ -1,7 +1,7 @@
+ #!/usr/bin/python
+ 
+ DOMAIN = "cinnamon-control-center"
+-PATH = "/usr/share/cinnamon/locale"
++PATH = "/usr/share/locale"
+ 
+ import os, gettext, sys
+ sys.path.append('/usr/lib/linuxmint/common')
+Index: cinnamon-control-center/panels/color/cc-color-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/color/cc-color-panel.c	2014-04-26 23:16:49.538241618 +0200
++++ cinnamon-control-center/panels/color/cc-color-panel.c	2014-07-12 13:44:54.511354678 +0200
+@@ -2687,7 +2687,7 @@
+ void
+ cc_color_panel_register (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   cc_color_panel_register_type (G_TYPE_MODULE (module));
+   g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/common/gdm-languages.c
+===================================================================
+--- cinnamon-control-center.orig/panels/common/gdm-languages.c	2014-04-26 23:16:49.542241713 +0200
++++ cinnamon-control-center/panels/common/gdm-languages.c	2014-07-12 13:46:00.441034594 +0200
+@@ -331,7 +331,7 @@
+         const char  *name;
+         gboolean     has_translations;
+ 
+-        path = g_build_filename ("/usr/share/cinnamon/locale", language_name, "LC_MESSAGES", NULL);
++        path = g_build_filename ("/usr/share/locale", language_name, "LC_MESSAGES", NULL);
+ 
+         has_translations = FALSE;
+         dir = g_dir_open (path, 0, NULL);
+Index: cinnamon-control-center/panels/datetime/datetime-module.c
+===================================================================
+--- cinnamon-control-center.orig/panels/datetime/datetime-module.c	2014-04-26 23:16:49.550241904 +0200
++++ cinnamon-control-center/panels/datetime/datetime-module.c	2014-07-12 13:46:13.481366225 +0200
+@@ -30,10 +30,10 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+-  bindtextdomain (GETTEXT_PACKAGE_TIMEZONES, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE_TIMEZONES, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE_TIMEZONES, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/panels/display/cc-display-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/display/cc-display-panel.c	2014-04-26 23:16:49.574242477 +0200
++++ cinnamon-control-center/panels/display/cc-display-panel.c	2014-07-12 13:44:44.883109251 +0200
+@@ -2617,7 +2617,7 @@
+ void
+ cc_display_panel_register (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   cc_display_panel_register_type (G_TYPE_MODULE (module));
+   g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/network/cc-network-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/network/cc-network-panel.c	2014-04-26 23:16:49.574242477 +0200
++++ cinnamon-control-center/panels/network/cc-network-panel.c	2014-07-12 13:44:59.739488142 +0200
+@@ -1246,7 +1246,7 @@
+ void
+ cc_network_panel_register (GIOModule *module)
+ {
+-    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+     cc_network_panel_register_type (G_TYPE_MODULE (module));
+     g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/power/cc-power-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/power/cc-power-panel.c	2014-04-26 23:16:49.578242572 +0200
++++ cinnamon-control-center/panels/power/cc-power-panel.c	2014-07-12 13:45:42.496577952 +0200
+@@ -1194,7 +1194,7 @@
+ void
+ cc_power_panel_register (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   cc_power_panel_register_type (G_TYPE_MODULE (module));
+Index: cinnamon-control-center/panels/region/cc-region-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/region/cc-region-panel.c	2014-04-26 23:16:49.582242668 +0200
++++ cinnamon-control-center/panels/region/cc-region-panel.c	2014-07-12 13:45:37.432448946 +0200
+@@ -128,7 +128,7 @@
+ void
+ cc_region_panel_register (GIOModule * module)
+ {
+-    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 	cc_region_panel_register_type (G_TYPE_MODULE (module));
+ 	g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/screen/cc-screen-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/screen/cc-screen-panel.c	2014-04-26 23:18:15.336303329 +0200
++++ cinnamon-control-center/panels/screen/cc-screen-panel.c	2014-07-12 13:45:06.719666250 +0200
+@@ -304,7 +304,7 @@
+ void
+ cc_screen_panel_register (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   cc_screen_panel_register_type (G_TYPE_MODULE (module));
+   g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/sound-nua/cc-sound-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/sound-nua/cc-sound-panel.c	2014-04-26 23:16:49.582242668 +0200
++++ cinnamon-control-center/panels/sound-nua/cc-sound-panel.c	2014-07-12 13:44:37.754926889 +0200
+@@ -127,7 +127,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+         /* register the panel */
+Index: cinnamon-control-center/panels/sound/applet-main.c
+===================================================================
+--- cinnamon-control-center.orig/panels/sound/applet-main.c	2014-04-26 23:16:49.582242668 +0200
++++ cinnamon-control-center/panels/sound/applet-main.c	2014-07-12 13:45:55.488908604 +0200
+@@ -51,7 +51,7 @@
+                 { NULL, 0, 0, 0, NULL, NULL, NULL }
+         };
+ 
+-        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+         textdomain (GETTEXT_PACKAGE);
+ 
+Index: cinnamon-control-center/panels/sound/cc-sound-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/sound/cc-sound-panel.c	2014-04-26 23:16:49.582242668 +0200
++++ cinnamon-control-center/panels/sound/cc-sound-panel.c	2014-07-12 13:45:49.504756308 +0200
+@@ -134,7 +134,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++        bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+         /* register the panel */
+Index: cinnamon-control-center/panels/universal-access/cc-ua-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/universal-access/cc-ua-panel.c	2014-04-26 23:16:49.594242954 +0200
++++ cinnamon-control-center/panels/universal-access/cc-ua-panel.c	2014-07-12 13:45:30.904282667 +0200
+@@ -681,7 +681,7 @@
+ void
+ cc_ua_panel_register (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   cc_ua_panel_register_type (G_TYPE_MODULE (module));
+   g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/panels/wacom/cc-wacom-panel.c
+===================================================================
+--- cinnamon-control-center.orig/panels/wacom/cc-wacom-panel.c	2014-04-26 23:16:49.598243049 +0200
++++ cinnamon-control-center/panels/wacom/cc-wacom-panel.c	2014-07-12 13:46:05.665167475 +0200
+@@ -381,7 +381,7 @@
+ cc_wacom_panel_register (GIOModule *module)
+ {
+ 	cc_wacom_panel_register_type (G_TYPE_MODULE (module));
+-	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+ 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 	g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+ 					CC_TYPE_WACOM_PANEL, "wacom", 0);
+Index: cinnamon-control-center/shell/control-center.c
+===================================================================
+--- cinnamon-control-center.orig/shell/control-center.c	2014-04-26 23:16:49.602243145 +0200
++++ cinnamon-control-center/shell/control-center.c	2014-07-12 13:41:52.062839608 +0200
+@@ -235,7 +235,7 @@
+   GtkApplication *application;
+   int status;
+ 
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   textdomain (GETTEXT_PACKAGE);
+ 
+Index: cinnamon-control-center/unused-panels/background/background-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/background/background-module.c	2014-04-26 23:16:49.602243145 +0200
++++ cinnamon-control-center/unused-panels/background/background-module.c	2014-07-12 13:42:31.051776580 +0200
+@@ -28,7 +28,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/unused-panels/info/info-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/info/info-module.c	2014-04-26 23:16:49.602243145 +0200
++++ cinnamon-control-center/unused-panels/info/info-module.c	2014-07-12 13:42:02.799097982 +0200
+@@ -28,7 +28,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/unused-panels/keyboard/keyboard-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/keyboard/keyboard-module.c	2014-04-26 23:16:49.602243145 +0200
++++ cinnamon-control-center/unused-panels/keyboard/keyboard-module.c	2014-07-12 13:43:16.252862663 +0200
+@@ -28,7 +28,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/unused-panels/mouse/mouse-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/mouse/mouse-module.c	2014-04-26 23:16:49.606243240 +0200
++++ cinnamon-control-center/unused-panels/mouse/mouse-module.c	2014-07-12 13:43:06.012616659 +0200
+@@ -28,7 +28,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/unused-panels/online-accounts/cc-online-accounts-panel.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/online-accounts/cc-online-accounts-panel.c	2014-04-26 23:16:49.606243240 +0200
++++ cinnamon-control-center/unused-panels/online-accounts/cc-online-accounts-panel.c	2014-07-12 13:42:13.915364800 +0200
+@@ -291,7 +291,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+   goa_panel_register (module);
+ }
+Index: cinnamon-control-center/unused-panels/printers/printers-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/printers/printers-module.c	2014-04-26 23:16:49.610243335 +0200
++++ cinnamon-control-center/unused-panels/printers/printers-module.c	2014-07-12 13:43:26.989120687 +0200
+@@ -26,7 +26,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
+Index: cinnamon-control-center/unused-panels/user-accounts/um-user-panel.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/user-accounts/um-user-panel.c	2014-04-26 23:16:49.618243526 +0200
++++ cinnamon-control-center/unused-panels/user-accounts/um-user-panel.c	2014-07-12 13:42:22.331567090 +0200
+@@ -1352,7 +1352,7 @@
+ void
+ um_user_panel_register (GIOModule *module)
+ {
+-    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+     um_user_panel_register_type (G_TYPE_MODULE (module));
+     g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
+Index: cinnamon-control-center/unused-panels/wacom/calibrator/main.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/wacom/calibrator/main.c	2014-04-26 23:16:49.618243526 +0200
++++ cinnamon-control-center/unused-panels/wacom/calibrator/main.c	2014-07-12 13:43:35.733340128 +0200
+@@ -390,7 +390,7 @@
+     struct Calib* calibrator = main_common(argc, argv);
+     CalibArea *calib_area;
+ 
+-    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++    bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+     textdomain (GETTEXT_PACKAGE);
+ 
+Index: cinnamon-control-center/unused-panels/wacom/test-wacom.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/wacom/test-wacom.c	2014-04-26 23:16:49.622243622 +0200
++++ cinnamon-control-center/unused-panels/wacom/test-wacom.c	2014-07-12 13:43:51.301738919 +0200
+@@ -65,7 +65,7 @@
+ 	GtkWidget *window, *notebook;
+ 	GList *devices;
+ 
+-	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+ 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 	textdomain (GETTEXT_PACKAGE);
+ 
+Index: cinnamon-control-center/unused-panels/wacom/wacom-module.c
+===================================================================
+--- cinnamon-control-center.orig/unused-panels/wacom/wacom-module.c	2014-04-26 23:16:49.622243622 +0200
++++ cinnamon-control-center/unused-panels/wacom/wacom-module.c	2014-07-12 13:43:42.597515996 +0200
+@@ -28,7 +28,7 @@
+ void
+ g_io_module_load (GIOModule *module)
+ {
+-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
++  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
+   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+ 
+   /* register the panel */
