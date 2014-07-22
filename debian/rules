@@ -16,7 +16,8 @@ override_dh_auto_configure:
 	    --disable-scrollkeeper \
 	    --disable-ibus \
 	    --disable-update-mimedb \
-	    --with-clutter
+	    --with-clutter \
+	    --enable-systemd
 
 override_dh_auto_test:
 	# Disable auto tests
