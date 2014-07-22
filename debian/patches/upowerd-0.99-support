@@ -1,22 +1,20 @@
-Index: cinnamon-control-center/panels/power/cc-power-panel.c
-===================================================================
---- cinnamon-control-center.orig/panels/power/cc-power-panel.c	2014-07-13 18:53:14.948942327 +0200
-+++ cinnamon-control-center/panels/power/cc-power-panel.c	2014-07-13 19:17:20.859724535 +0200
-@@ -934,10 +934,16 @@
+--- a/panels/power/cc-power-panel.c
++++ b/panels/power/cc-power-panel.c
+@@ -934,10 +934,18 @@
                            -1);
        switch (value_tmp) {
        case CSD_POWER_ACTION_SUSPEND:
--        enabled = cc_login1("CanSuspend") || up_client_get_can_suspend (self->priv->up_client);
++#if UP_CHECK_VERSION(0,99,0)
 +        enabled = cc_login1("CanSuspend");
-+#if ! UP_CHECK_VERSION(0,99,0)
-+        enabled = enabled || up_client_get_can_suspend (self->priv->up_client);
++#else
+         enabled = cc_login1("CanSuspend") || up_client_get_can_suspend (self->priv->up_client);
 +#endif
          break;
        case CSD_POWER_ACTION_HIBERNATE:
--        enabled = cc_login1("CanHibernate") || up_client_get_can_hibernate (self->priv->up_client);
++#if UP_CHECK_VERSION(0,99,0)
 +        enabled = cc_login1("CanHibernate");
-+#if ! UP_CHECK_VERSION(0,99,0)
-+        enabled = enabled || up_client_get_can_hibernate (self->priv->up_client);
++#else
+         enabled = cc_login1("CanHibernate") || up_client_get_can_hibernate (self->priv->up_client);
 +#endif
          break;
        default:
