@@ -1,3 +1,10 @@
+cinnamon-control-center (2.2.11-1~) UNRELEASED; urgency=medium
+
+  * New upstream release.
+  * debian/patches: removed one patch applied upstream.
+
+ -- Fabio Fantoni <fantonifabio@tiscali.it>  Thu, 28 Aug 2014 21:12:24 +0200
+
 cinnamon-control-center (2.2.10-3) unstable; urgency=medium
 
   [ Fabio Fantoni ]
