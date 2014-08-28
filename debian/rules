@@ -4,6 +4,7 @@ export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+SYSTEMD_CONFIGURE := $(shell dpkg-architecture -qDEB_HOST_ARCH -ilinux-any && echo --enable-systemd)
 
 %:
 	dh $@ --parallel --with=autoreconf,gnome
@@ -16,8 +17,7 @@ override_dh_auto_configure:
 	    --disable-scrollkeeper \
 	    --disable-ibus \
 	    --disable-update-mimedb \
-	    --with-clutter \
-	    --enable-systemd
+	    --with-clutter $(SYSTEMD_CONFIGURE)
 
 override_dh_auto_test:
 	# Disable auto tests
