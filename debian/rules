@@ -5,6 +5,8 @@ export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 SYSTEMD_CONFIGURE := $(shell dpkg-architecture -qDEB_HOST_ARCH -ilinux-any && echo --enable-systemd)
+DATA_PKG = cinnamon-control-center-data
+MAIN_PKG = cinnamon-control-center
 
 %:
 	dh $@ --parallel --with=autoreconf,gnome
@@ -27,6 +29,16 @@ override_dh_strip:
 
 override_dh_install:
 	dh_install --list-missing
+
+override_dh_installchangelogs:
+	# Only install the changelog in the arch:all package
+	dh_installchangelogs -i ChangeLog
+	dh_installchangelogs -a -XChangeLog
+	# Put the changelog file in the main package doc dir.
+	install -d debian/$(DATA_PKG)/usr/share/doc/$(MAIN_PKG)
+	[ ! -f debian/$(DATA_PKG)/usr/share/doc/$(DATA_PKG)/changelog ] \
+	    || mv debian/$(DATA_PKG)/usr/share/doc/$(DATA_PKG)/changelog \
+	    debian/$(DATA_PKG)/usr/share/doc/$(MAIN_PKG)/changelog
 
 override_dh_makeshlibs:
 	dh_makeshlibs \

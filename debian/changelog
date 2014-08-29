@@ -1,10 +1,15 @@
-cinnamon-control-center (2.2.11-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (2.2.11-2~) UNRELEASED; urgency=medium
 
+  [ Fabio Fantoni ]
   * New upstream release.
   * debian/patches: removed one patch applied upstream.
   * Use systemd only with linux to make possible build on kfreebsd.
 
- -- Fabio Fantoni <fantonifabio@tiscali.it>  Thu, 28 Aug 2014 21:22:38 +0200
+  [ Margarita Manterola ]
+  * Put the upstream changelog only in the -data package, but inside the
+    directory for the main package.
+
+ -- Margarita Manterola <marga@debian.org>  Thu, 28 Aug 2014 20:03:41 -0700
 
 cinnamon-control-center (2.2.10-3) unstable; urgency=medium
 
