@@ -1,3 +1,10 @@
+cinnamon-control-center (2.2.11-3) unstable; urgency=medium
+
+  * Add Breaks/Replaces needed for the moving of the changelog file done
+    in the previous upload. Closes: #760348.
+
+ -- Margarita Manterola <marga@debian.org>  Sat, 30 Aug 2014 18:54:20 -0700
+
 cinnamon-control-center (2.2.11-2) unstable; urgency=medium
 
   [ Fabio Fantoni ]
