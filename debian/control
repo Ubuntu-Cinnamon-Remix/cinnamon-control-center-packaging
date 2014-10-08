@@ -62,11 +62,11 @@ Depends: accountsservice,
          desktop-file-utils,
          gnome-icon-theme (>= 2.24),
          gnome-icon-theme-symbolic,
-         libcanberra-pulse,
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: cups-pk-helper,
             iso-codes,
+            libcanberra-pulse,
             mesa-utils,
             mousetweaks,
             policykit-1-gnome

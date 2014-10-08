@@ -1,6 +1,7 @@
 cinnamon-control-center (2.2.11-5~) UNRELEASED; urgency=medium
 
-  * 
+  * Degrade libcanberra-pulse dependency to recommends, so pulseaudio is
+    optional again.
 
  -- Maximiliano Curia <maxy@debian.org>  Sun, 26 Oct 2014 11:11:12 +0100
 
