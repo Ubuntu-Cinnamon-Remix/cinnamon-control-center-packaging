@@ -1,3 +1,9 @@
+cinnamon-control-center (2.2.11-5~) UNRELEASED; urgency=medium
+
+  * 
+
+ -- Maximiliano Curia <maxy@debian.org>  Sun, 26 Oct 2014 11:11:12 +0100
+
 cinnamon-control-center (2.2.11-4) unstable; urgency=medium
 
   * Make all Network Manager related dependencies linux-any and allow the
