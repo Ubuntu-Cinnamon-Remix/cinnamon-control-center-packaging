@@ -1,0 +1,44 @@
+Description: Build network panel optionally
+ This patch allows network-manager to not be present and in that case the
+ network panel is not built.
+Author: Margarita Manterola <marga@debian.org>
+Forwarded: not yet
+Last-Update: 2014-10-25
+
+--- cinnamon-control-center-2.2.11.orig/configure.ac
++++ cinnamon-control-center-2.2.11/configure.ac
+@@ -137,7 +137,10 @@ PKG_CHECK_MODULES(UNIVERSAL_ACCESS_PANEL
+ PKG_CHECK_MODULES(NETWORK_MANAGER, NetworkManager >= $NETWORK_MANAGER_REQUIRED_VERSION
+                   libnm-glib >= $NETWORK_MANAGER_REQUIRED_VERSION
+                   libnm-util >= $NETWORK_MANAGER_REQUIRED_VERSION
+-		  libnm-gtk >= $NETWORK_MANAGER_REQUIRED_VERSION)
++                  libnm-gtk >= $NETWORK_MANAGER_REQUIRED_VERSION,
++                  [build_network="true"], [build_network="false"])
++
++AM_CONDITIONAL(BUILD_NETWORK, test "x$build_network" = "xtrue")
+ 
+ # Check for libnm-gtk + 0.9.9.0
+ PKG_CHECK_MODULES(LIBNM_GTK_COMPAT, libnm-gtk >= $LIBNM_GTK_REQUIRED_VERSION
+--- cinnamon-control-center-2.2.11.orig/panels/Makefile.am
++++ cinnamon-control-center-2.2.11/panels/Makefile.am
+@@ -10,7 +10,6 @@ enabled_panels = \
+ 	power \
+ 	sound \
+ 	sound-nua \
+-	network \
+ 	datetime
+ 
+ disabled_panels = $(NULL)
+@@ -21,6 +20,12 @@ else
+ disabled_panels += wacom
+ endif
+ 
++if BUILD_NETWORK
++enabled_panels += network
++else
++disabled_panels += network
++endif
++
+ SUBDIRS = common $(enabled_panels)
+ DIST_SUBDIRS = $(SUBDIRS) $(disabled_panels)
+ 
