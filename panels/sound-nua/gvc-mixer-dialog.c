@@ -774,9 +774,10 @@ active_input_update (GvcMixerDialog *dialog,
         adj = GTK_ADJUSTMENT (gvc_channel_bar_get_adjustment (GVC_CHANNEL_BAR (dialog->priv->input_bar)));
         g_signal_handlers_disconnect_by_func(adj, on_adjustment_value_changed, dialog);
 
-        gtk_label_set_label (GTK_LABEL(dialog->priv->selected_input_label),
-                             g_strdup_printf(_("Settings for %s"),
-                                             gvc_mixer_ui_device_get_description (active_input)));  
+        gchar *str = g_strdup_printf(_("Settings for %s"),
+                                      gvc_mixer_ui_device_get_description (active_input));
+        gtk_label_set_label (GTK_LABEL(dialog->priv->selected_input_label), str);
+        g_free (str);
 
         gvc_channel_bar_set_base_volume (GVC_CHANNEL_BAR (dialog->priv->input_bar),
                                          gvc_mixer_stream_get_base_volume (stream));
@@ -944,9 +945,11 @@ active_output_update (GvcMixerDialog *dialog,
         gtk_widget_set_sensitive (dialog->priv->output_bar, 
                                   TRUE);
         // Set the label accordingly
-	gtk_label_set_label (GTK_LABEL(dialog->priv->selected_output_label),
-			     g_strdup_printf(_("Settings for %s"),
-                                             gvc_mixer_ui_device_get_description (active_output)));
+        gchar *str = g_strdup_printf(_("Settings for %s"),
+                                     gvc_mixer_ui_device_get_description (active_output));
+        gtk_label_set_label (GTK_LABEL(dialog->priv->selected_output_label), str);
+        g_free (str);
+
         g_debug ("\n active_output_update %s \n", gvc_mixer_ui_device_get_description (active_output));
 
         GList* profiles = gvc_mixer_ui_device_get_profiles (active_output);
@@ -1116,7 +1119,8 @@ on_control_stream_added (GvcMixerControl *control,
                 && !gvc_mixer_stream_is_virtual (stream)
                 && g_strcmp0 (app_id, "org.gnome.VolumeControl") != 0
                 && g_strcmp0 (app_id, "org.PulseAudio.pavucontrol") != 0)
-                && g_strcmp0 (app_id, "org.Cinnamon") != 0) {
+                && g_strcmp0 (app_id, "org.Cinnamon") != 0 /* FIXME: org.Cinnamon.xx.xx should be unified */
+                && g_strcmp0 (app_id, "org.cinnamon") != 0) {
 
                 GtkWidget      *bar;
 
@@ -2069,7 +2073,7 @@ gvc_mixer_dialog_constructor (GType                  type,
 
         add_sound_effect_selector (sounds_grid, 0, _("Starting Cinnamon:"), sound_settings, "login-file", "login-enabled", self);
         add_sound_effect_selector (sounds_grid, 1, _("Switching workspace:"), sound_settings, "switch-file", "switch-enabled", self);       
-        add_sound_effect_selector (sounds_grid, 2, _("Mapping windows:"), sound_settings, "map-file", "map-enabled", self);       
+        add_sound_effect_selector (sounds_grid, 2, _("Opening new windows:"), sound_settings, "map-file", "map-enabled", self);       
         add_sound_effect_selector (sounds_grid, 3, _("Closing windows:"), sound_settings, "close-file", "close-enabled", self);       
         add_sound_effect_selector (sounds_grid, 4, _("Minimizing windows:"), sound_settings, "minimize-file", "minimize-enabled", self);       
         add_sound_effect_selector (sounds_grid, 5, _("Maximizing windows:"), sound_settings, "maximize-file", "maximize-enabled", self);       
