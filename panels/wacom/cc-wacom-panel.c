@@ -322,7 +322,7 @@ cc_wacom_panel_init (CcWacomPanel *self)
         g_resources_register (cc_wacom_get_resource ());
 
 	priv->builder = gtk_builder_new ();
-
+	gtk_builder_set_translation_domain (priv->builder, GETTEXT_PACKAGE);
 	gtk_builder_add_objects_from_resource (priv->builder,
                                                "/org/cinnamon/control-center/wacom/cinnamon-wacom-properties.ui",
                                                objects,
@@ -381,7 +381,7 @@ void
 cc_wacom_panel_register (GIOModule *module)
 {
 	cc_wacom_panel_register_type (G_TYPE_MODULE (module));
-	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/cinnamon/locale");
+	bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	g_io_extension_point_implement (CC_SHELL_PANEL_EXTENSION_POINT,
 					CC_TYPE_WACOM_PANEL, "wacom", 0);
