@@ -15,11 +15,7 @@ override_dh_gnome_clean:
 	dh_gnome_clean --no-control
 
 override_dh_auto_configure:
-	dh_auto_configure -- \
-	    --disable-scrollkeeper \
-	    --disable-ibus \
-	    --disable-update-mimedb \
-	    --with-clutter $(SYSTEMD_CONFIGURE)
+	dh_auto_configure $(SYSTEMD_CONFIGURE)
 
 override_dh_auto_test:
 	# Disable auto tests

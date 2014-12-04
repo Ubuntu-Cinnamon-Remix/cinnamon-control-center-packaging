@@ -19,9 +19,7 @@ Build-Depends: autotools-dev,
                intltool (>= 0.37.1),
                libcanberra-gtk3-dev,
                libcinnamon-desktop-dev (>= 1.0.0),
-               libclutter-gtk-1.0-dev,
                libcolord-dev,
-               libcups2-dev,
                libdbus-1-dev (>= 0.32),
                libdbus-glib-1-dev (>= 0.32),
                libgdk-pixbuf2.0-dev (>= 2.23.0),
@@ -47,8 +45,7 @@ Build-Depends: autotools-dev,
                libxklavier-dev (>= 5.1),
                libxml2-dev,
                locales,
-               network-manager-dev (>= 0.9.8) [linux-any],
-               shared-mime-info
+               network-manager-dev (>= 0.9.8) [linux-any]
 Standards-Version: 3.9.5
 Homepage: http://cinnamon.linuxmint.com/
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cinnamon/cinnamon-control-center.git
@@ -66,8 +63,7 @@ Depends: accountsservice,
          gnome-icon-theme-symbolic,
          ${misc:Depends},
          ${shlibs:Depends}
-Recommends: cups-pk-helper,
-            iso-codes,
+Recommends: iso-codes,
             libcanberra-pulse,
             mesa-utils,
             mousetweaks,
