@@ -3,6 +3,7 @@ cinnamon-control-center (2.4.2-1~) UNRELEASED; urgency=medium
   [ Maximiliano Curia ]
   * Degrade libcanberra-pulse dependency to recommends, so pulseaudio is
     optional again.
+  * Bump Standards-Version to 3.9.6, no changes needed.
 
   [ Fabio Fantoni ]
   * New upstream release.

@@ -46,7 +46,7 @@ Build-Depends: autotools-dev,
                libxml2-dev,
                locales,
                network-manager-dev (>= 0.9.8) [linux-any]
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://cinnamon.linuxmint.com/
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cinnamon/cinnamon-control-center.git
 Vcs-Git: git://anonscm.debian.org/pkg-cinnamon/cinnamon-control-center.git
