@@ -1,7 +1,0 @@
-Description: Build network panel optionally
- This patch allows network-manager to not be present and in that case the
- network panel is not built.
-Author: Margarita Manterola <marga@debian.org>
-Forwarded: not yet
-Last-Update: 2014-10-25
-
