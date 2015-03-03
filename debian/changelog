@@ -1,4 +1,4 @@
-cinnamon-control-center (2.4.2-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (2.4.2-1) experimental; urgency=medium
 
   [ Maximiliano Curia ]
   * Degrade libcanberra-pulse dependency to recommends, so pulseaudio is
@@ -13,7 +13,7 @@ cinnamon-control-center (2.4.2-1~) UNRELEASED; urgency=medium
   * New upstream release.
   * debian/patches: removed 2 patches applied upstream.
 
- -- Fabio Fantoni <fantonifabio@tiscali.it>  Mon, 01 Dec 2014 12:44:15 +0100
+ -- Maximiliano Curia <maxy@debian.org>  Tue, 03 Mar 2015 10:17:07 +0100
 
 cinnamon-control-center (2.2.11-4) unstable; urgency=medium
 
