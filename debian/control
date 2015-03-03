@@ -9,7 +9,6 @@ Build-Depends: autotools-dev,
                cinnamon-settings-daemon,
                cinnamon-settings-daemon-dev,
                debhelper (>= 9),
-               dh-acc,
                desktop-file-utils,
                dh-autoreconf,
                gnome-common,
@@ -47,6 +46,7 @@ Build-Depends: autotools-dev,
                locales,
                network-manager-dev (>= 0.9.8) [linux-any]
 Standards-Version: 3.9.6
+XS-Testsuite: autopkgtest
 Homepage: http://cinnamon.linuxmint.com/
 Vcs-Browser: http://anonscm.debian.org/cgit/pkg-cinnamon/cinnamon-control-center.git
 Vcs-Git: git://anonscm.debian.org/pkg-cinnamon/cinnamon-control-center.git

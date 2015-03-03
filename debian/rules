@@ -39,12 +39,3 @@ override_dh_installchangelogs:
 override_dh_makeshlibs:
 	dh_makeshlibs \
 	    -Xusr/lib/$(DEB_HOST_MULTIARCH)/cinnamon-control-center-1/panels
-
-run_dh_acc:
-	# The package needs to be installed (@ in autopkgtest)
-	for in_file in debian/*.acc.in; do \
-	    out_file=$${in_file%.in}; \
-	    sed 's/\$${DEB_HOST_MULTIARCH}/'"$(DEB_HOST_MULTIARCH)"'/' \
-		"$${in_file}" > "$${out_file}"; \
-	done
-	dh_acc

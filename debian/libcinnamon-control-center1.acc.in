@@ -10,7 +10,7 @@
 </headers>
 
 <libs>
-    /usr/lib/${DEB_HOST_MULTIARCH}/libcinnamon-control-center.so
+    /usr/lib/@@DEB_HOST_MULTIARCH@@/libcinnamon-control-center.so
 </libs>
 
 </descriptor>

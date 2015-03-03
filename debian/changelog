@@ -5,6 +5,7 @@ cinnamon-control-center (2.4.2-1~) UNRELEASED; urgency=medium
     optional again.
   * Bump Standards-Version to 3.9.6, no changes needed.
   * Update copyright information.
+  * Add basic autopkgtests support.
 
   [ Fabio Fantoni ]
   * New upstream release.
