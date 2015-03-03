@@ -18,12 +18,12 @@ Build-Depends: autotools-dev,
                intltool (>= 0.37.1),
                libcanberra-gtk3-dev,
                libcinnamon-desktop-dev (>= 1.0.0),
+               libcinnamon-menu-3-dev,
                libcolord-dev,
                libdbus-1-dev (>= 0.32),
                libdbus-glib-1-dev (>= 0.32),
                libgdk-pixbuf2.0-dev (>= 2.23.0),
                libglib2.0-dev (>= 2.31.0),
-               libcinnamon-menu-3-dev,
                libgnomekbd-dev,
                libgstreamer-plugins-base0.10-dev,
                libgtk-3-dev (>= 3.4.1),
@@ -63,12 +63,12 @@ Depends: accountsservice,
          gnome-icon-theme-symbolic,
          ${misc:Depends},
          ${shlibs:Depends}
+Breaks: gnome-power-manager (<< 3.0)
 Recommends: iso-codes,
             libcanberra-pulse,
             mesa-utils,
             mousetweaks,
             policykit-1-gnome
-Breaks: gnome-power-manager (<< 3.0)
 Suggests: gstreamer0.10-pulseaudio, libcanberra-gtk-module, x11-xserver-utils
 Description: utilities to configure the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
@@ -96,16 +96,18 @@ Description: configuration applets for Cinnamon - data files
  the configuration applets in the cinnamon-control-center package.
 
 Package: libcinnamon-control-center-dev
-Architecture: any
 Section: libdevel
-Depends: libcinnamon-control-center1 (= ${binary:Version}), ${misc:Depends}
+Architecture: any
+Depends: libcinnamon-control-center1 (= ${binary:Version}),
+         libgtk-3-dev (>= 3.4.1),
+         ${misc:Depends}
 Description: utilities to configure the Cinnamon desktop
  This package contains the development files for the cinnamon control center
  panels library.
 
 Package: libcinnamon-control-center1
-Architecture: any
 Section: libs
+Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
