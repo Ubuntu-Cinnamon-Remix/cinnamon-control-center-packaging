@@ -19,6 +19,7 @@ override_dh_auto_configure:
 
 override_dh_auto_test:
 	# Disable auto tests
+	:
 
 override_dh_strip:
 	dh_strip --dbg-package=cinnamon-control-center-dbg
