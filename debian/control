@@ -84,13 +84,16 @@ Recommends: cinnamon-control-center (>= ${source:Version})
 Provides: cinnamon-capplets-data
 Conflicts: cinnamon-capplets-data
 Replaces: cinnamon-capplets-data,
+          cinnamon-control-center (<< 2.2.11),
           gdm (<< 3.0),
           gdm3 (<< 3.0),
           gnome-media-common (<< 2.91),
-          gnome-power-manager (<< 3.2),
-          cinnamon-control-center (<< 2.2.11)
-Breaks: gnome-power-manager (<< 3.2),
-        cinnamon-control-center (<< 2.2.11)
+          gnome-power-manager (<< 3.2)
+Breaks: cinnamon-control-center (<< 2.2.11),
+        gdm (<< 3.0),
+        gdm3 (<< 3.0),
+        gnome-media-common (<< 2.91),
+        gnome-power-manager (<< 3.2)
 Description: configuration applets for Cinnamon - data files
  This package contains data files (icons, pixmaps, locales files) needed by
  the configuration applets in the cinnamon-control-center package.
