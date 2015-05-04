@@ -51,7 +51,8 @@ Package: cinnamon-control-center
 Architecture: any
 Depends: accountsservice,
          apg,
-         cinnamon-control-center-data (>= ${source:Version}),
+         cinnamon-control-center-data (= ${source:Version}),
+         libcinnamon-control-center1 (= ${binary:Version}),
          cinnamon-desktop-data,
          cinnamon-settings-daemon,
          desktop-file-utils,
