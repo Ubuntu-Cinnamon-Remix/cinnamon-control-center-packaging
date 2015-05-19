@@ -373,7 +373,6 @@ cc_network_panel_constructed (GObject *object)
         gtk_box_pack_start (GTK_BOX (box), widget, FALSE, FALSE, 4);
         gtk_widget_show_all (box);
         panel->priv->rfkill_switch = GTK_SWITCH (widget);
-        //cc_shell_embed_widget_in_header (cc_panel_get_shell (CC_PANEL (panel)), box);
         panel->priv->kill_switch_header = g_object_ref (box);
 
         g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
@@ -562,7 +561,7 @@ handle_argv_for_device (CcNetworkPanel *panel,
 {
         CcNetworkPanelPrivate *priv = panel->priv;
         NMDeviceType type;
-        GtkWidget *toplevel = cc_shell_get_toplevel (cc_panel_get_shell (CC_PANEL (panel)));
+        GtkWidget *toplevel = GTK_WIDGET(panel);
 
         if (priv->arg_operation == OPERATION_NULL)
                 return TRUE;
@@ -1311,30 +1310,17 @@ static gboolean
 panel_check_network_manager_version (CcNetworkPanel *panel)
 {
         const gchar *version;
-        gchar **split = NULL;
-        guint major = 0;
-        guint micro = 0;
-        guint minor = 0;
         gboolean ret = TRUE;
 
         /* parse running version */
         version = nm_client_get_version (panel->priv->client);
-        if (version != NULL) {
-                split = g_strsplit (version, ".", -1);
-                major = atoi (split[0]);
-                minor = atoi (split[1]);
-                micro = atoi (split[2]);
-        }
-
-        /* is it too new or old */
-        if (major > 0 || minor > 9 || (minor <= 8 && micro < 992)) {
+        if (version == NULL) {
                 ret = FALSE;
 
                 /* do modal dialog in idle so we don't block startup */
                 panel->priv->nm_warning_idle = g_idle_add ((GSourceFunc)display_version_warning_idle, panel);
         }
 
-        g_strfreev (split);
         return ret;
 }
 
@@ -1381,8 +1367,8 @@ on_toplevel_map (GtkWidget      *widget,
 {
         gboolean ret;
 
-        /* is the user compiling against a new version, but running an
-         * old daemon version? */
+        /* is the user compiling against a new version, but not running
+         * the daemon? */
         ret = panel_check_network_manager_version (panel);
         if (ret) {
                 manager_running (panel->priv->client, NULL, panel);

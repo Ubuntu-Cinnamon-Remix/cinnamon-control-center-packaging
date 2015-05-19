@@ -1,6 +1,6 @@
-m4_define([cinnamon_control_center_version], 2.4.2)
+m4_define([cinnamon_control_center_version], 2.6.0)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
-        [http://bugzilla.gnome.org/enter_bug.cgi?product=cinnamon-control-center])
+        [https://github.com/linuxmint/cinnamon-control-center/issues])
 
 AC_CONFIG_SRCDIR([shell])
 AC_CONFIG_HEADERS([config.h])
@@ -97,7 +97,6 @@ NETWORK_MANAGER_APPLET_REQUIRED_VERSION=0.9.7.995
 MODEM_MANAGER_REQUIRED_VERSION=0.7
 LIBNOTIFY_REQUIRED_VERSION=0.7.3
 CINNAMON_DESKTOP_REQUIRED_VERSION=1.0.0
-CLUTTER_REQUIRED_VERSION=1.11.3
 CSD_REQUIRED_VERSION=1.0.0
 LIBWACOM_REQUIRED_VERSION=0.7
 
@@ -122,13 +121,10 @@ PKG_CHECK_MODULES(DISPLAY_PANEL, $COMMON_MODULES cinnamon-desktop x11)
 PKG_CHECK_MODULES(MEDIA_PANEL, $COMMON_MODULES)
 
 PKG_CHECK_MODULES(NETWORK_PANEL, $COMMON_MODULES gmodule-2.0)
-PKG_CHECK_MODULES(POWER_PANEL, $COMMON_MODULES upower-glib >= 0.9.1
-                  cinnamon-settings-daemon >= $CSD_REQUIRED_VERSION)
-PKG_CHECK_MODULES(COLOR_PANEL, $COMMON_MODULES colord >= 0.1.8)
+PKG_CHECK_MODULES(COLOR_PANEL, $COMMON_MODULES colord >= 0.1.14)
 PKG_CHECK_MODULES(REGION_PANEL, $COMMON_MODULES libgnomekbd >= 2.91.91
                   polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION
                   libxklavier >= 5.1 libgnomekbdui >= 2.91.91)
-PKG_CHECK_MODULES(SCREEN_PANEL, $COMMON_MODULES)
 PKG_CHECK_MODULES(SOUND_PANEL, $COMMON_MODULES libxml-2.0
                   libcanberra-gtk3 >= $CANBERRA_REQUIRED_VERSION
                   libpulse >= $PA_REQUIRED_VERSION
@@ -172,7 +168,7 @@ AM_CONDITIONAL(HAVE_NM_UNSTABLE, [test x$nm_unstable = xyes])
 
 AC_ARG_ENABLE([cups],
               AS_HELP_STRING([--disable-cups], [disable CUPS support (default: enabled)]),,
-              [enable_cups=yes])
+              [enable_cups=no])
 
 if test x"$enable_cups" != x"no" ; then
   AC_PROG_SED
@@ -263,18 +259,6 @@ fi
 AM_CONDITIONAL(WITH_LIBSOCIALWEB, test "x$with_libsocialweb" = "xyes")
 
 
-dnl =======================================
-dnl Update Mime Database
-dnl =======================================
-
-AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database, no)
-
-AC_ARG_ENABLE(update-mimedb,
-   AS_HELP_STRING([--disable-update-mimedb],
-                  [do not update mime database after installation]),,
-                   enable_update_mimedb=yes)
-AM_CONDITIONAL(ENABLE_UPDATE_MIMEDB, test x$enable_update_mimedb = xyes)
-
 CONTROL_CENTER_VERSION=cinnamon_control_center_version
 AC_SUBST(CONTROL_CENTER_VERSION)
 
@@ -342,15 +326,12 @@ fi
 
 AC_OUTPUT([
 Makefile
-shell/libcinnamon-control-center.pc
 panels/Makefile
 panels/common/Makefile
 panels/display/Makefile
 panels/display/cinnamon-display-panel.desktop.in
 panels/region/Makefile
 panels/region/cinnamon-region-panel.desktop.in
-panels/screen/Makefile
-panels/screen/cinnamon-screen-panel.desktop.in
 panels/color/Makefile
 panels/color/cinnamon-color-panel.desktop.in
 panels/color/icons/Makefile
@@ -399,15 +380,6 @@ panels/sound/data/icons/scalable/devices/Makefile
 panels/sound-nua/Makefile
 panels/sound-nua/data/Makefile
 panels/sound-nua/data/cinnamon-sound-nua-panel.desktop.in
-panels/power/Makefile
-panels/power/cinnamon-power-panel.desktop.in
-panels/power/icons/Makefile
-panels/power/icons/16x16/Makefile
-panels/power/icons/22x22/Makefile
-panels/power/icons/24x24/Makefile
-panels/power/icons/32x32/Makefile
-panels/power/icons/48x48/Makefile
-panels/power/icons/256x256/Makefile
 panels/wacom/Makefile
 panels/wacom/calibrator/Makefile
 panels/wacom/cinnamon-wacom-panel.desktop.in
@@ -415,9 +387,9 @@ panels/datetime/Makefile
 panels/datetime/cinnamon-datetime-panel.desktop.in
 panels/datetime/po-timezones/Makefile
 po/Makefile.in
-files/Makefile
 shell/Makefile
 shell/cinnamon-control-center.desktop.in
+shell/libcinnamon-control-center.pc
 ])
 
 AC_MSG_NOTICE([cinnamon-control-center was configured with the following options:])
@@ -426,22 +398,20 @@ if test "x$have_networkmanager" = "xyes"; then
 else
 	AC_MSG_NOTICE([   Network panel disabled])
 fi
-if test "x$with_libsocialweb" = "xyes"; then
-	AC_MSG_NOTICE([** libsocialweb (Background panel Flickr support)])
+#if test "x$with_libsocialweb" = "xyes"; then
+#	AC_MSG_NOTICE([** libsocialweb (Background panel Flickr support)])
+#else
+#	AC_MSG_NOTICE([   Background panel Flickr support disabled])
+#fi
+#if test "x$with_systemd" = "xyes"; then
+#	AC_MSG_NOTICE([** systemd (Systemd session tracking)])
+#else
+#	AC_MSG_NOTICE([   Using ConsoleKit for session tracking])
+#fi
+if test "x$build_wacom" = "xtrue"; then
+	AC_MSG_NOTICE([** Wacom support (Wacom panel)])
 else
-	AC_MSG_NOTICE([   Background panel Flickr support disabled])
-fi
-if test "x$with_systemd" = "xyes"; then
-	AC_MSG_NOTICE([** systemd (Systemd session tracking)])
-else
-	AC_MSG_NOTICE([   Using ConsoleKit for session tracking])
+	AC_MSG_NOTICE([   Wacom support disabled])
 fi
 
-AC_MSG_NOTICE([   Wacom support:  $build_wacom])
-
-if test "x$enable_ibus" == "xyes"; then
-	AC_MSG_NOTICE([** IBus (Region panel IBus support)])
-else
-	AC_MSG_NOTICE([   Region panel IBus support disabled])
-fi
 AC_MSG_NOTICE([End options])
