@@ -4,7 +4,6 @@ export DEB_BUILD_MAINT_OPTIONS  = hardening=+all
 export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
-SYSTEMD_CONFIGURE := $(shell dpkg-architecture -qDEB_HOST_ARCH -ilinux-any && echo --enable-systemd)
 DATA_PKG = cinnamon-control-center-data
 MAIN_PKG = cinnamon-control-center
 
@@ -13,9 +12,6 @@ MAIN_PKG = cinnamon-control-center
 
 override_dh_gnome_clean:
 	dh_gnome_clean --no-control
-
-override_dh_auto_configure:
-	dh_auto_configure -- $(SYSTEMD_CONFIGURE)
 
 override_dh_auto_test:
 	# Disable auto tests
