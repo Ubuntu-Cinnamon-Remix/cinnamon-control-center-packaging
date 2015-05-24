@@ -1,4 +1,1 @@
 disable_silent_builds
-cleanup.patch
-Remove-the-NetworkManager-version-checking.patch
-fix_distclean
