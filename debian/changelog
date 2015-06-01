@@ -6,6 +6,7 @@ cinnamon-control-center (2.6.0-1~) UNRELEASED; urgency=medium
 
   [ Fabio Fantoni ]
   * Removed 3 patches applied upstream.
+  * Added debian/patches/fix-wifi-sec-path.patch.
 
  -- Fabio Fantoni <fantonifabio@tiscali.it>  Sun, 24 May 2015 11:35:00 +0200
 

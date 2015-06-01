@@ -1,0 +1,14 @@
+Description: Fix wifi security schema path
+Author: leigh123linux <leigh123linux@googlemail.com>
+Origin: Fedora
+Forwarded: no
+--- a/panels/network/wireless-security/eap-method.c	2015-05-19 16:23:24.000000000 +0100
++++ b/panels/network/wireless-security/eap-method.c	2015-05-28 23:03:53.982718448 +0100
+@@ -118,7 +118,7 @@ _get_ca_ignore_settings (const char *uui
+ 	GSettings *settings;
+ 	char *path = NULL;
+ 
+-	path = g_strdup_printf ("/org/cinnamon/nm-applet/eap/%s/", uuid);
++	path = g_strdup_printf ("/org/gnome/nm-applet/eap/%s/", uuid);
+ 	settings = g_settings_new_with_path ("org.gnome.nm-applet.eap", path);
+ 	g_free (path);
