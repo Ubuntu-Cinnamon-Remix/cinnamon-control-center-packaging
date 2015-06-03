@@ -1,4 +1,4 @@
-cinnamon-control-center (2.6.0-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (2.6.0-1) unstable; urgency=medium
 
   [ Maximiliano Curia ]
   * Improve package dependencies.
@@ -8,7 +8,7 @@ cinnamon-control-center (2.6.0-1~) UNRELEASED; urgency=medium
   * Removed 3 patches applied upstream.
   * Added debian/patches/fix-wifi-sec-path.patch.
 
- -- Fabio Fantoni <fantonifabio@tiscali.it>  Sun, 24 May 2015 11:35:00 +0200
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 03 Jun 2015 21:46:23 +0200
 
 cinnamon-control-center (2.4.2-1) experimental; urgency=medium
 
