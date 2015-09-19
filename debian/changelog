@@ -1,3 +1,9 @@
+cinnamon-control-center (2.6.0-2~) UNRELEASED; urgency=medium
+
+  * Backported a patch that add timezone 8.5 (Closes: #799404).
+
+ -- Fabio Fantoni <fantonifabio@tiscali.it>  Sat, 19 Sep 2015 17:58:08 +0200
+
 cinnamon-control-center (2.6.0-1) unstable; urgency=medium
 
   [ Maximiliano Curia ]
