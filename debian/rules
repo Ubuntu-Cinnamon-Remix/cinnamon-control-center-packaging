@@ -23,6 +23,23 @@ override_dh_strip:
 override_dh_install:
 	dh_install --list-missing
 
+# For patch backported:
+override_dh_auto_configure:
+	cp debian/patches/timezone_8.5.png panels/datetime/data/timezone_8.5.png
+	cp debian/patches/timezone_8.5_dim.png panels/datetime/data/timezone_8.5_dim.png
+	cp debian/patches/timezone_-8.5.png panels/datetime/data/timezone_-8.5.png
+	cp debian/patches/timezone_-8.5_dim.png panels/datetime/data/timezone_-8.5_dim.png
+	dh_auto_configure
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -f panels/datetime/data/timezone_8.5.png
+	rm -f panels/datetime/data/timezone_8.5_dim.png
+	rm -f panels/datetime/data/timezone_-8.5.png
+	rm -f panels/datetime/data/timezone_-8.5_dim.png
+
+# End patch backported
+
 override_dh_installchangelogs:
 	# Only install the changelog in the arch:all package
 	dh_installchangelogs -i ChangeLog
