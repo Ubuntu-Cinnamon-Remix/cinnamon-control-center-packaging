@@ -1,6 +1,7 @@
 cinnamon-control-center (2.8.1-1~) UNRELEASED; urgency=medium
 
   * New upstream release (2.8.1).
+  * Remove upstream patch: Kim-ie-has-moved-Pyonyang-half-an-hour.patch
 
  -- Maximiliano Curia <maxy@debian.org>  Wed, 21 Oct 2015 12:58:42 +0200
 
