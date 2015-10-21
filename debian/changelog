@@ -1,3 +1,9 @@
+cinnamon-control-center (2.8.1-1~) UNRELEASED; urgency=medium
+
+  * New upstream release (2.8.1).
+
+ -- Maximiliano Curia <maxy@debian.org>  Wed, 21 Oct 2015 12:58:42 +0200
+
 cinnamon-control-center (2.6.0-2) unstable; urgency=medium
 
   [ Fabio Fantoni ]
