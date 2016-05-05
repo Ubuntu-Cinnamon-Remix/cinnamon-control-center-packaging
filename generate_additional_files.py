@@ -11,21 +11,6 @@ os.environ['LANG'] = "en_US.UTF-8"
 gettext.install(DOMAIN, PATH)
 
 prefix = """[Desktop Entry]
-Exec=cinnamon-settings sound
-Icon=cs-sound
-Terminal=false
-Type=Application
-StartupNotify=true
-Categories=GTK;Settings;HardwareSettings;X-Cinnamon-Settings-Panel;
-OnlyShowIn=X-Cinnamon;
-X-Cinnamon-Settings-Panel=sound-nua
-# Translators: those are keywords for the sound control-center panel
-_Keywords=Card;Microphone;Volume;Fade;Balance;Bluetooth;Headset;
-"""
-
-additionalfiles.generate(DOMAIN, PATH, "./panels/sound-nua/data/cinnamon-sound-nua-panel.desktop.in.in", prefix, _("Sound"), _("Change sound volume and sound events"), "")
-
-prefix = """[Desktop Entry]
 Exec=cinnamon-settings color
 Icon=cs-color
 Terminal=false
@@ -39,36 +24,6 @@ _Keywords=Color;ICC;Profile;Calibrate;Printer;Display;
 """
 
 additionalfiles.generate(DOMAIN, PATH, "./panels/color/cinnamon-color-panel.desktop.in.in", prefix, _("Color"), _("Color management settings"), "")
-
-prefix = """[Desktop Entry]
-Exec=cinnamon-control-center sound
-Icon=cs-sound
-Terminal=false
-Type=Application
-StartupNotify=true
-Categories=GTK;Settings;HardwareSettings;X-Cinnamon-Settings-Panel;
-OnlyShowIn=X-Cinnamon;
-NoDisplay=true
-X-Cinnamon-Settings-Panel=sound
-# Translators: those are keywords for the sound control-center panel
-_Keywords=Card;Microphone;Volume;Fade;Balance;Bluetooth;Headset;Audio;
-"""
-
-additionalfiles.generate(DOMAIN, PATH, "./panels/sound/data/cinnamon-sound-panel.desktop.in.in", prefix, _("Sound"), _("Change sound volume and sound events"), "")
-
-prefix = """[Desktop Entry]
-Icon=cs-sound
-Exec=cinnamon-sound-applet
-Terminal=false
-Type=Application
-Categories=
-NoDisplay=true
-X-GNOME-Autostart-Notify=true
-AutostartCondition=GNOME3 if-session gnome-fallback
-OnlyShowIn=X-Cinnamon;
-"""
-
-additionalfiles.generate(DOMAIN, PATH, "./panels/sound/data/cinnamon-sound-applet.desktop.in", prefix, _("Volume Control"), _("Show desktop volume control"), "")
 
 prefix = """[Desktop Entry]
 Exec=cinnamon-settings region
@@ -115,21 +70,6 @@ _Keywords=Network;Wireless;IP;LAN;Proxy;
 """
 
 additionalfiles.generate(DOMAIN, PATH, "./panels/network/cinnamon-network-panel.desktop.in.in", prefix, _("Network"), _("Network settings"), "")
-
-prefix = """[Desktop Entry]
-Exec=cinnamon-settings universal-access
-Icon=cs-universal-access
-Terminal=false
-Type=Application
-StartupNotify=true
-Categories=GTK;Settings;X-Cinnamon-SystemSettings;X-Cinnamon-Settings-Panel;
-OnlyShowIn=X-Cinnamon;
-X-Cinnamon-Settings-Panel=universal-access
-# Translators: those are keywords for the universal access control-center panel
-_Keywords=Keyboard;Mouse;a11y;Accessibility;Contrast;Zoom;Screen Reader;text;font;size;AccessX;Sticky Keys;Slow Keys;Bounce Keys;Mouse Keys;
-"""
-
-additionalfiles.generate(DOMAIN, PATH, "./panels/universal-access/cinnamon-universal-access-panel.desktop.in.in", prefix, _("Accessibility"), _("Universal Access Preferences"), "")
 
 prefix = """[Desktop Entry]
 Exec=cinnamon-control-center datetime

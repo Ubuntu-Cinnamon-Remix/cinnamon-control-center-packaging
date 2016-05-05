@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 2.8.1)
+m4_define([cinnamon_control_center_version], 3.0.0)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -125,11 +125,6 @@ PKG_CHECK_MODULES(COLOR_PANEL, $COMMON_MODULES colord >= 0.1.14)
 PKG_CHECK_MODULES(REGION_PANEL, $COMMON_MODULES libgnomekbd >= 2.91.91
                   polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION
                   libxklavier >= 5.1 libgnomekbdui >= 2.91.91)
-PKG_CHECK_MODULES(SOUND_PANEL, $COMMON_MODULES libxml-2.0
-                  libcanberra-gtk3 >= $CANBERRA_REQUIRED_VERSION
-                  libpulse >= $PA_REQUIRED_VERSION
-                  libpulse-mainloop-glib >= $PA_REQUIRED_VERSION)
-PKG_CHECK_MODULES(UNIVERSAL_ACCESS_PANEL, $COMMON_MODULES)
 
 #----------------------------------------------
 # Network Manager Stuff
@@ -347,39 +342,6 @@ panels/network/Makefile
 panels/network/wireless-security/Makefile
 panels/network/connection-editor/Makefile
 panels/network/cinnamon-network-panel.desktop.in
-panels/universal-access/Makefile
-panels/universal-access/cinnamon-universal-access-panel.desktop.in
-panels/sound/Makefile
-panels/sound/data/Makefile
-panels/sound/data/cinnamon-sound-panel.desktop.in
-panels/sound/data/symbolic-icons/Makefile
-panels/sound/data/symbolic-icons/scalable/Makefile
-panels/sound/data/symbolic-icons/scalable/status/Makefile
-panels/sound/data/icons/Makefile
-panels/sound/data/icons/16x16/Makefile
-panels/sound/data/icons/16x16/apps/Makefile
-panels/sound/data/icons/16x16/devices/Makefile
-panels/sound/data/icons/16x16/status/Makefile
-panels/sound/data/icons/22x22/Makefile
-panels/sound/data/icons/22x22/apps/Makefile
-panels/sound/data/icons/22x22/status/Makefile
-panels/sound/data/icons/24x24/Makefile
-panels/sound/data/icons/24x24/apps/Makefile
-panels/sound/data/icons/24x24/devices/Makefile
-panels/sound/data/icons/24x24/status/Makefile
-panels/sound/data/icons/32x32/Makefile
-panels/sound/data/icons/32x32/apps/Makefile
-panels/sound/data/icons/32x32/devices/Makefile
-panels/sound/data/icons/32x32/status/Makefile
-panels/sound/data/icons/48x48/Makefile
-panels/sound/data/icons/48x48/apps/Makefile
-panels/sound/data/icons/48x48/devices/Makefile
-panels/sound/data/icons/scalable/Makefile
-panels/sound/data/icons/scalable/apps/Makefile
-panels/sound/data/icons/scalable/devices/Makefile
-panels/sound-nua/Makefile
-panels/sound-nua/data/Makefile
-panels/sound-nua/data/cinnamon-sound-nua-panel.desktop.in
 panels/wacom/Makefile
 panels/wacom/calibrator/Makefile
 panels/wacom/cinnamon-wacom-panel.desktop.in
