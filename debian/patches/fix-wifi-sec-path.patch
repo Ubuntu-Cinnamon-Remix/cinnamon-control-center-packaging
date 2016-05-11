@@ -1,10 +1,20 @@
+From: Debian Cinnamon Team <pkg-cinnamon-team@lists.alioth.debian.org>
+Date: Wed, 11 May 2016 20:50:17 +0200
+Subject: fix-wifi-sec-path
+
 Description: Fix wifi security schema path
 Author: leigh123linux <leigh123linux@googlemail.com>
 Origin: Fedora
 Forwarded: no
---- a/panels/network/wireless-security/eap-method.c	2015-05-19 16:23:24.000000000 +0100
-+++ b/panels/network/wireless-security/eap-method.c	2015-05-28 23:03:53.982718448 +0100
-@@ -118,7 +118,7 @@ _get_ca_ignore_settings (const char *uui
+---
+ panels/network/wireless-security/eap-method.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/panels/network/wireless-security/eap-method.c b/panels/network/wireless-security/eap-method.c
+index 2863877..b6444ce 100644
+--- a/panels/network/wireless-security/eap-method.c
++++ b/panels/network/wireless-security/eap-method.c
+@@ -118,7 +118,7 @@ _get_ca_ignore_settings (const char *uuid)
  	GSettings *settings;
  	char *path = NULL;
  
@@ -12,3 +22,4 @@ Forwarded: no
 +	path = g_strdup_printf ("/org/gnome/nm-applet/eap/%s/", uuid);
  	settings = g_settings_new_with_path ("org.gnome.nm-applet.eap", path);
  	g_free (path);
+ 
