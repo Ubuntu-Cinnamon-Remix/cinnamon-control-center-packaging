@@ -44,20 +44,20 @@ Build-Depends: autotools-dev,
 Standards-Version: 3.9.6
 XS-Testsuite: autopkgtest
 Homepage: http://cinnamon.linuxmint.com/
-Vcs-Browser: http://anonscm.debian.org/cgit/pkg-cinnamon/cinnamon-control-center.git
-Vcs-Git: git://anonscm.debian.org/pkg-cinnamon/cinnamon-control-center.git
+Vcs-Browser: https://anonscm.debian.org/git/pkg-cinnamon/cinnamon-control-center.git
+Vcs-Git: https://anonscm.debian.org/git/pkg-cinnamon/cinnamon-control-center.git
 
 Package: cinnamon-control-center
 Architecture: any
 Depends: accountsservice,
          apg,
          cinnamon-control-center-data (= ${source:Version}),
-         libcinnamon-control-center1 (= ${binary:Version}),
          cinnamon-desktop-data,
          cinnamon-settings-daemon,
          desktop-file-utils,
          gnome-icon-theme (>= 2.24),
          gnome-icon-theme-symbolic,
+         libcinnamon-control-center1 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: gnome-power-manager (<< 3.0)
