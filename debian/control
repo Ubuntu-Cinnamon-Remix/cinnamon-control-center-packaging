@@ -113,12 +113,3 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: utilities to configure the Cinnamon desktop
  This package contains the library used by control center panels
-
-Package: cinnamon-control-center-dbg
-Priority: extra
-Section: debug
-Architecture: any
-Depends: cinnamon-control-center (= ${binary:Version}), ${misc:Depends}
-Description: utilities to configure the Cinnamon desktop - debug symbols
- This package contains the debug symbols for the configuration applets of the
- Cinnamon desktop.
