@@ -1,8 +1,15 @@
-cinnamon-control-center (3.0.0-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.0.0-1) unstable; urgency=medium
 
   * New upstream release (3.0.0).
+  * debian/control: Update Vcs-Browser and Vcs-Git fields
+  * Add a .gitattributes file to use dpkg-mergechangelogs
+  * Bump Standards-Version to 3.9.8
+  * Migrate dbg package to automatic dbgsym
+  * Refresh patches
+  * Update install files, remove autostart file
+  * Drop old menu files
 
- -- Maximiliano Curia <maxy@debian.org>  Thu, 05 May 2016 08:05:12 +0200
+ -- Maximiliano Curia <maxy@debian.org>  Sun, 15 May 2016 12:10:59 +0200
 
 cinnamon-control-center (2.8.1-1) unstable; urgency=medium
 
