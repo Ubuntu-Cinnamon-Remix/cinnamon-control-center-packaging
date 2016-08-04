@@ -1,4 +1,4 @@
-cinnamon-control-center (3.0.1-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.0.1-1) unstable; urgency=medium
 
   [ Margarita Manterola ]
   * Fix dbgsym-migration rules
@@ -8,7 +8,7 @@ cinnamon-control-center (3.0.1-1~) UNRELEASED; urgency=medium
   * Add new patch: Migrate-away-from-gnome-common-deprecated-vars-and-
     macros.patch (Closes: #829924)
 
- -- Maximiliano Curia <maxy@debian.org>  Mon, 18 Jul 2016 13:26:36 +0200
+ -- Maximiliano Curia <maxy@debian.org>  Thu, 04 Aug 2016 12:26:16 +0200
 
 cinnamon-control-center (3.0.0-1) unstable; urgency=medium
 
