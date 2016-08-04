@@ -7,7 +7,7 @@ Subject: disable_silent_builds
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index 51486d5..3160f4b 100644
+index 1f5cd0f..163f43f 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -8,7 +8,7 @@ AC_CONFIG_MACRO_DIR([m4])
