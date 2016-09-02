@@ -54,8 +54,6 @@ Depends: accountsservice,
          cinnamon-desktop-data,
          cinnamon-settings-daemon,
          desktop-file-utils,
-         gnome-icon-theme (>= 2.24),
-         gnome-icon-theme-symbolic,
          libcinnamon-control-center1 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
