@@ -1,4 +1,4 @@
-cinnamon-control-center (3.0.1-2~3) UNRELEASED; urgency=medium
+cinnamon-control-center (3.0.1-2) unstable; urgency=medium
 
   [ Maximiliano Curia ]
   * Drop gnome-icon-theme and gnome-icon-theme-symbolic dependencies. This is
@@ -11,7 +11,7 @@ cinnamon-control-center (3.0.1-2~3) UNRELEASED; urgency=medium
   * Add autoconf-archive to prevent a future FTBFS.
     Thanks to Michael Biebl for reporting (Closes: #837860)
 
- -- Margarita Manterola <marga@debian.org>  Sun, 16 Oct 2016 16:29:41 +0200
+ -- Margarita Manterola <marga@debian.org>  Sun, 16 Oct 2016 16:56:33 +0200
 
 cinnamon-control-center (3.0.1-1) unstable; urgency=medium
 
