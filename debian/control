@@ -69,11 +69,10 @@ Recommends:
  mousetweaks,
  policykit-1-gnome,
 Suggests: gstreamer1.0-pulseaudio, libcanberra-gtk-module, x11-xserver-utils
-Description: utilities to configure the Cinnamon desktop
+Description: configuration applets for the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
- allowing to set accessibility configuration, desktop fonts, keyboard
- and mouse properties, sound setup, desktop theme and background, user
- interface properties, screen resolution, and other Cinnamon parameters.
+ allowing to set the date and time, regional settings, network configuration,
+ screen resolution, and other Cinnamon parameters.
 
 Package: cinnamon-control-center-data
 Architecture: all
@@ -106,7 +105,7 @@ Depends:
  libcinnamon-control-center1 (= ${binary:Version}),
  libgtk-3-dev (>= 3.4.1),
  ${misc:Depends},
-Description: utilities to configure the Cinnamon desktop
+Description: configuration applets for Cinnamon - development files
  This package contains the development files for the cinnamon control center
  panels library.
 
@@ -116,5 +115,5 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: utilities to configure the Cinnamon desktop
- This package contains the library used by control center panels
+Description: library used by configuration applets for Cinnamon
+ This package contains the library used by control center panels.
