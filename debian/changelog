@@ -1,11 +1,15 @@
-cinnamon-control-center (3.0.1-2~1.gbpef15f7) UNRELEASED; urgency=medium
+cinnamon-control-center (3.0.1-2~2) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @ef15f7504b3fcf842b19bf8977e20a6b6fc28249 **
-
-  * Drop gnome-icon-theme and gnome-icon-theme-symbolic dependencies
+  [ Maximiliano Curia ]
+  * Drop gnome-icon-theme and gnome-icon-theme-symbolic dependencies. This is
+    part of #833480, thanks to Jeremy Bicha for reporting.
   * Drop obsolete XS-Testsuite field
 
- -- Maximiliano Curia <maxy@gnuservers.com.ar>  Fri, 02 Sep 2016 11:58:00 +0200
+  [ Margarita Manterola ]
+  * Add tzdata as build-dependency as it's not longer part of build-essential.
+    Thanks to Lucas Nussbaum for reporting (Closes: #839462).
+
+ -- Margarita Manterola <marga@debian.org>  Sun, 16 Oct 2016 16:29:41 +0200
 
 cinnamon-control-center (3.0.1-1) unstable; urgency=medium
 
