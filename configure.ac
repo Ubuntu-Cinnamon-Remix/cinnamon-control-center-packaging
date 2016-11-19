@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 3.0.1)
+m4_define([cinnamon_control_center_version], 3.2.0)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -6,9 +6,14 @@ AC_CONFIG_SRCDIR([shell])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+AX_IS_RELEASE([always])
+
 AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
+AX_CHECK_ENABLE_DEBUG([yes])
+AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
 
 # Check for programs
 AC_PROG_CC
@@ -34,9 +39,6 @@ IT_PROG_INTLTOOL([0.40.1])
 GETTEXT_PACKAGE=cinnamon-control-center
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package])
-
-GNOME_DEBUG_CHECK
-GNOME_COMPILE_WARNINGS([maximum])
 
 AC_PATH_XTRA
 x_libs="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
@@ -236,23 +238,6 @@ AC_SUBST(PANEL_LIBS)
 PANEL_LDFLAGS="-export_dynamic -avoid-version -module -no-undefined -export-symbols-regex '^g_io_module_(load|unload)'"
 AC_SUBST(PANEL_LDFLAGS)
 
-dnl ==============================================
-dnl libsocialweb
-dnl ==============================================
-
-AC_MSG_CHECKING([Enable libsocialweb support])
-AC_ARG_WITH([libsocialweb],
-   AS_HELP_STRING([--with-libsocialweb],
-                  [enable libsocialweb support]),,
-   [with_libsocialweb=no])
-AC_MSG_RESULT([$with_libsocialweb])
-
-if test "x$with_libsocialweb" == "xyes"; then
-  PKG_CHECK_MODULES(SOCIALWEB, libsocialweb-client)
-  AC_DEFINE(HAVE_LIBSOCIALWEB, 1, [Defined if libsocialweb is available])
-fi
-AM_CONDITIONAL(WITH_LIBSOCIALWEB, test "x$with_libsocialweb" = "xyes")
-
 
 CONTROL_CENTER_VERSION=cinnamon_control_center_version
 AC_SUBST(CONTROL_CENTER_VERSION)
@@ -360,11 +345,6 @@ if test "x$have_networkmanager" = "xyes"; then
 else
 	AC_MSG_NOTICE([   Network panel disabled])
 fi
-#if test "x$with_libsocialweb" = "xyes"; then
-#	AC_MSG_NOTICE([** libsocialweb (Background panel Flickr support)])
-#else
-#	AC_MSG_NOTICE([   Background panel Flickr support disabled])
-#fi
 #if test "x$with_systemd" = "xyes"; then
 #	AC_MSG_NOTICE([** systemd (Systemd session tracking)])
 #else
