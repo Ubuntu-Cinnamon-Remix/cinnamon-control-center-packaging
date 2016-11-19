@@ -1,3 +1,9 @@
+cinnamon-control-center (3.2.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Margarita Manterola <marga@debian.org>  Sat, 19 Nov 2016 12:27:06 +0100
+
 cinnamon-control-center (3.0.1-2) unstable; urgency=medium
 
   [ Maximiliano Curia ]
