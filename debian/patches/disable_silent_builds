@@ -6,16 +6,14 @@ Subject: disable_silent_builds
  configure.ac | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/configure.ac b/configure.ac
-index 1f5cd0f..163f43f 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -8,7 +8,7 @@ AC_CONFIG_MACRO_DIR([m4])
+@@ -10,7 +10,7 @@
  
  AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
  AM_MAINTAINER_MODE([enable])
 -m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 +m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([no])])
  
- # Check for programs
- AC_PROG_CC
+ AX_CHECK_ENABLE_DEBUG([yes])
+ AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
