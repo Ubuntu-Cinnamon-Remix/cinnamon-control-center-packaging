@@ -1,4 +1,4 @@
-cinnamon-control-center (3.2.1-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.2.1-1) experimental; urgency=medium
 
   [ Margarita Manterola ]
   * New upstream release.
@@ -9,7 +9,7 @@ cinnamon-control-center (3.2.1-1~) UNRELEASED; urgency=medium
   * New upstream release (3.2.1).
   * Refresh patches
 
- -- Maximiliano Curia <maxy@debian.org>  Sat, 17 Dec 2016 19:56:48 +0100
+ -- Maximiliano Curia <maxy@debian.org>  Sat, 17 Dec 2016 20:10:15 +0100
 
 cinnamon-control-center (3.0.1-2) unstable; urgency=medium
 
