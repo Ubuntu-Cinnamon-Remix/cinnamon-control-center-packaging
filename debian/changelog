@@ -7,6 +7,7 @@ cinnamon-control-center (3.2.1-1~) UNRELEASED; urgency=medium
   * Drop upstream applied patch: Migrate-away-from-gnome-common-
     deprecated-vars-and-macros.patch
   * New upstream release (3.2.1).
+  * Refresh patches
 
  -- Maximiliano Curia <maxy@debian.org>  Sat, 17 Dec 2016 19:56:48 +0100
 

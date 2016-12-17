@@ -6,9 +6,11 @@ Subject: disable_silent_builds
  configure.ac | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/configure.ac b/configure.ac
+index b538534..c9543c8 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -10,7 +10,7 @@
+@@ -10,7 +10,7 @@ m4_ifdef([AX_IS_RELEASE], [AX_IS_RELEASE([always])])
  
  AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
  AM_MAINTAINER_MODE([enable])
@@ -16,4 +18,4 @@ Subject: disable_silent_builds
 +m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([no])])
  
  AX_CHECK_ENABLE_DEBUG([yes])
- AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
+ m4_ifdef([AX_COMPILER_FLAGS],
