@@ -1,4 +1,4 @@
-cinnamon-control-center (3.2.0-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.2.1-1~) UNRELEASED; urgency=medium
 
   [ Margarita Manterola ]
   * New upstream release.
@@ -6,8 +6,9 @@ cinnamon-control-center (3.2.0-1~) UNRELEASED; urgency=medium
   [ Maximiliano Curia ]
   * Drop upstream applied patch: Migrate-away-from-gnome-common-
     deprecated-vars-and-macros.patch
+  * New upstream release (3.2.1).
 
- -- Margarita Manterola <marga@debian.org>  Sat, 19 Nov 2016 12:27:06 +0100
+ -- Maximiliano Curia <maxy@debian.org>  Sat, 17 Dec 2016 19:56:48 +0100
 
 cinnamon-control-center (3.0.1-2) unstable; urgency=medium
 
