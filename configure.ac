@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 3.2.0)
+m4_define([cinnamon_control_center_version], 3.2.1)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -6,14 +6,15 @@ AC_CONFIG_SRCDIR([shell])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AX_IS_RELEASE([always])
+m4_ifdef([AX_IS_RELEASE], [AX_IS_RELEASE([always])])
 
 AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AX_CHECK_ENABLE_DEBUG([yes])
-AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
+m4_ifdef([AX_COMPILER_FLAGS],
+         [AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])])
 
 # Check for programs
 AC_PROG_CC
