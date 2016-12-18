@@ -8,6 +8,7 @@ Uploaders:
  Fabio Fantoni <fantonifabio@tiscali.it>,
 Build-Depends:
  autoconf-archive,
+ automake,
  autotools-dev,
  cinnamon-settings-daemon-dev,
  debhelper (>= 9),
