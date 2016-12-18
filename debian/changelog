@@ -1,9 +1,9 @@
-cinnamon-control-center (3.2.1-2~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.2.1-2) experimental; urgency=medium
 
   * Explicitly depend on automake, as some buildds sometimes pull
     automaken instead, causing build failures.
 
- -- Maximiliano Curia <maxy@debian.org>  Sun, 18 Dec 2016 16:59:01 +0100
+ -- Maximiliano Curia <maxy@debian.org>  Sun, 18 Dec 2016 17:00:15 +0100
 
 cinnamon-control-center (3.2.1-1) experimental; urgency=medium
 
