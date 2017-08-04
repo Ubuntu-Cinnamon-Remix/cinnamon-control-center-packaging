@@ -1,3 +1,9 @@
+cinnamon-control-center (3.4.0-1~) UNRELEASED; urgency=medium
+
+  * New upstream release (3.4.0).
+
+ -- Maximiliano Curia <maxy@debian.org>  Fri, 04 Aug 2017 21:50:10 +0200
+
 cinnamon-control-center (3.2.1-3) unstable; urgency=medium
 
   * Release to unstable
