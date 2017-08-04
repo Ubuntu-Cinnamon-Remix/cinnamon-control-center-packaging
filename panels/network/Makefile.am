@@ -32,8 +32,6 @@ libnetwork_la_SOURCES =					\
 	net-device-simple.h				\
 	net-device-ethernet.c				\
 	net-device-ethernet.h				\
-	net-device-mobile.c				\
-	net-device-mobile.h				\
 	net-device-bond.c				\
 	net-device-bond.h				\
 	net-device-bridge.c				\
@@ -51,13 +49,25 @@ libnetwork_la_SOURCES =					\
 	cc-network-panel.c				\
 	cc-network-panel.h
 
+if BUILD_MODEM
+libnetwork_la_SOURCES +=			\
+	net-device-mobile.c				\
+	net-device-mobile.h
+NETWORK_PANEL_CFLAGS += -DBUILD_MODEM
+AM_CPPFLAGS += $(MODEM_MANAGER_CFLAGS)
+endif
+
 TEAM_FILES = net-device-team.c net-device-team.h
 EXTRA_DIST = $(TEAM_FILES)
 if HAVE_NM_UNSTABLE
 libnetwork_la_SOURCES += $(TEAM_FILES)
 endif
 
+if BUILD_MODEM
+libnetwork_la_LIBADD = $(PANEL_LIBS) $(NETWORK_PANEL_LIBS) $(NETWORK_MANAGER_LIBS) $(MODEM_MANAGER_LIBS) $(builddir)/connection-editor/libconnection-editor.la
+else
 libnetwork_la_LIBADD = $(PANEL_LIBS) $(NETWORK_PANEL_LIBS) $(NETWORK_MANAGER_LIBS) $(builddir)/connection-editor/libconnection-editor.la
+endif
 
 libnetwork_la_LDFLAGS = $(WARN_LDFLAGS) $(PANEL_LDFLAGS)
 
