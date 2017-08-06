@@ -62,7 +62,7 @@ Depends:
  libcinnamon-control-center1 (= ${binary:Version}),
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: gnome-power-manager (<< 3.0)
+Breaks: cinnamon (<< 3.2), cinnamon-core (<< 3.2), gnome-power-manager (<< 3.0)
 Recommends:
  iso-codes,
  libcanberra-pulse,
