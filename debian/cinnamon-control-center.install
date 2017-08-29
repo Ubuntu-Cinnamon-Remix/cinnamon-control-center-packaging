@@ -2,4 +2,3 @@ usr/bin/cinnamon-control-center
 usr/lib/*/cinnamon-control-center-1/panels/*.so
 usr/share/applications/cinnamon-*-panel.desktop
 usr/share/applications/cinnamon-control-center.desktop
-usr/share/polkit-1/rules.d/cinnamon-control-center.rules
