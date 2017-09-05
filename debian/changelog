@@ -1,3 +1,9 @@
+cinnamon-control-center (3.4.0-3~) UNRELEASED; urgency=medium
+
+  * Add missed cinnamon-l10n to cinnamon-control-center recommends.
+
+ -- Fabio Fantoni <fantonifabio@tiscali.it>  Tue, 05 Sep 2017 12:09:53 +0200
+
 cinnamon-control-center (3.4.0-2) unstable; urgency=medium
 
   [ Fabio Fantoni ]
