@@ -1,8 +1,14 @@
-cinnamon-control-center (3.4.0-3~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.6.1-1~) UNRELEASED; urgency=medium
 
-  * Add missed cinnamon-l10n to cinnamon-control-center recommends.
+  * New upstream release (3.6.1). (Closes: #857224)
+  * debian/control:
+    add missed cinnamon-l10n to cinnamon-control-center recommends.
+    remove very old gnome-power-manager, gdm and gnome-media-common breaks
+    update network manager build-deps
+    add build-deps and dep to gnome-online-accounts
+    bump group breaks (3.6)
 
- -- Fabio Fantoni <fantonifabio@tiscali.it>  Tue, 05 Sep 2017 12:09:53 +0200
+ -- Fabio Fantoni <fantonifabio@tiscali.it>  Wed, 01 Nov 2017 15:46:29 +0100
 
 cinnamon-control-center (3.4.0-2) unstable; urgency=medium
 
