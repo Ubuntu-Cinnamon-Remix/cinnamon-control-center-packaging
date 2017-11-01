@@ -285,7 +285,7 @@ static gboolean
 link_activated (GtkLinkButton *button,
 		CcWacomPanel  *self)
 {
-    g_spawn_command_line_async ("cinnamon-settings bluetooth", NULL);
+    g_spawn_command_line_async ("blueberry", NULL);
 	return TRUE;
 }
 
@@ -333,6 +333,7 @@ cc_wacom_panel_init (CcWacomPanel *self)
 
 	/* Notebook */
 	notebook = GTK_NOTEBOOK (gtk_notebook_new ());
+	gtk_notebook_set_show_border(notebook, FALSE);
 	priv->notebook = GTK_WIDGET (notebook);
 
 	gtk_notebook_set_show_tabs (notebook, FALSE);
