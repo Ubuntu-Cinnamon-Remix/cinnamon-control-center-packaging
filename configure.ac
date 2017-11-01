@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 3.4.0)
+m4_define([cinnamon_control_center_version], 3.6.1)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -12,7 +12,8 @@ AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar check-news])
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AX_CHECK_ENABLE_DEBUG([yes])
+m4_ifdef([AX_CHECK_ENABLE_DEBUG],
+         [AX_CHECK_ENABLE_DEBUG([yes])])
 m4_ifdef([AX_COMPILER_FLAGS],
          [AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])])
 
@@ -91,17 +92,16 @@ dnl ==============================================
 
 GLIB_REQUIRED_VERSION=2.31.0
 GTK_REQUIRED_VERSION=3.4.1
-PA_REQUIRED_VERSION=1.1
-CANBERRA_REQUIRED_VERSION=0.13
 GDKPIXBUF_REQUIRED_VERSION=2.23.0
 POLKIT_REQUIRED_VERSION=0.103
-NETWORK_MANAGER_REQUIRED_VERSION=0.9.8
-NETWORK_MANAGER_APPLET_REQUIRED_VERSION=0.9.7.995
+NETWORK_MANAGER_REQUIRED_VERSION=1.2.0
+NETWORK_MANAGER_APPLET_REQUIRED_VERSION=1.2.0
 MODEM_MANAGER_REQUIRED_VERSION=0.7
 LIBNOTIFY_REQUIRED_VERSION=0.7.3
 CINNAMON_DESKTOP_REQUIRED_VERSION=1.0.0
 CSD_REQUIRED_VERSION=1.0.0
 LIBWACOM_REQUIRED_VERSION=0.7
+GOA_REQUIRED_VERSION=3.18.0
 
 COMMON_MODULES="gtk+-3.0 >= $GTK_REQUIRED_VERSION
  glib-2.0 >= $GLIB_REQUIRED_VERSION
@@ -123,7 +123,8 @@ PKG_CHECK_MODULES(DATETIME_PANEL, $COMMON_MODULES dbus-glib-1
 PKG_CHECK_MODULES(DISPLAY_PANEL, $COMMON_MODULES cinnamon-desktop x11)
 PKG_CHECK_MODULES(MEDIA_PANEL, $COMMON_MODULES)
 
-PKG_CHECK_MODULES(NETWORK_PANEL, $COMMON_MODULES gmodule-2.0)
+PKG_CHECK_MODULES(NETWORK_PANEL, $COMMON_MODULES gmodule-2.0
+                  polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION)
 PKG_CHECK_MODULES(REGION_PANEL, $COMMON_MODULES libgnomekbd >= 2.91.91
                   polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION
                   libxklavier >= 5.1 libgnomekbdui >= 2.91.91)
@@ -142,11 +143,9 @@ AC_ARG_ENABLE(networkmanager,
               [enable_networkmanager=yes]) dnl Enabled by default
 
 if test "x$enable_networkmanager" = xyes; then
-    PKG_CHECK_MODULES(NETWORK_MANAGER, NetworkManager >= $NETWORK_MANAGER_REQUIRED_VERSION
-                      libnm-glib >= $NETWORK_MANAGER_REQUIRED_VERSION
-                      libnm-glib-vpn >= $NETWORK_MANAGER_REQUIRED_VERSION
-                      libnm-util >= $NETWORK_MANAGER_REQUIRED_VERSION
-                      libnm-gtk >= $NETWORK_MANAGER_APPLET_REQUIRED_VERSION,
+    PKG_CHECK_MODULES(NETWORK_MANAGER,
+                      libnm >= $NETWORK_MANAGER_REQUIRED_VERSION
+                      libnma >= $NETWORK_MANAGER_APPLET_REQUIRED_VERSION,
                       [have_networkmanager=yes], have_networkmanager=no)
     if test "x$have_networkmanager" = xno ; then
         AC_MSG_ERROR(*** NetworkManager not found ***)
@@ -282,6 +281,34 @@ AM_CONDITIONAL(BUILD_WACOM, test "x$build_wacom" = "xtrue")
 AC_SUBST(WACOM_PANEL_CFLAGS)
 AC_SUBST(WACOM_PANEL_LIBS)
 
+# Online accounts
+AC_ARG_ENABLE(onlineaccounts, AC_HELP_STRING([--disable-onlineaccounts], [disable online-accounts panel]),
+              [case "${enableval}" in
+                      yes) enable_onlineaccounts=yes ;;
+                      no) enable_onlineaccounts=no ;;
+                      *) AC_MSG_ERROR(bad value ${enableval} for --disable-onlineaccounts) ;;
+              esac],
+              [enable_onlineaccounts=yes]) dnl Enabled by default
+
+if test "x$enable_onlineaccounts" = xyes; then
+    PKG_CHECK_MODULES(ONLINE_ACCOUNTS_PANEL, $COMMON_MODULES goa-1.0
+                  goa-backend-1.0 >= $GOA_REQUIRED_VERSION,
+                      [have_onlineaccounts=yes], have_onlineaccounts=no)
+    if test "x$have_onlineaccounts" = xno ; then
+        AC_MSG_ERROR(*** Gnome Online Accounts not found ***)
+    fi
+
+    AC_DEFINE(BUILD_ONLINE_ACCOUNTS, 1, [Define to 1 to build the online-accounts panel])
+
+    if test x${have_onlineaccounts} = xyes; then
+      AC_DEFINE(HAVE_ONLINE_ACCOUNTS, 1, [Define to 1 if Gnome Online Accounts is available])
+    fi
+fi
+
+AM_CONDITIONAL(BUILD_ONLINE_ACCOUNTS, [test x$have_onlineaccounts = xyes])
+AC_SUBST(ONLINE_ACCOUNTS_CFLAGS)
+AC_SUBST(ONLINE_ACCOUNTS_LIBS)
+
 # This is a hard-dependency for the region and user-accounts panels
 PKG_CHECK_MODULES(ISOCODES, iso-codes)
 
@@ -409,8 +436,16 @@ panels/wacom/Makefile
 panels/wacom/calibrator/Makefile
 panels/wacom/cinnamon-wacom-panel.desktop.in
 panels/datetime/Makefile
-panels/datetime/cinnamon-datetime-panel.desktop.in
 panels/datetime/po-timezones/Makefile
+panels/online-accounts/Makefile
+panels/online-accounts/cinnamon-online-accounts-panel.desktop.in
+panels/online-accounts/icons/Makefile
+panels/online-accounts/icons/16x16/Makefile
+panels/online-accounts/icons/22x22/Makefile
+panels/online-accounts/icons/24x24/Makefile
+panels/online-accounts/icons/32x32/Makefile
+panels/online-accounts/icons/48x48/Makefile
+panels/online-accounts/icons/256x256/Makefile
 po/Makefile.in
 shell/Makefile
 shell/cinnamon-control-center.desktop.in
@@ -444,6 +479,12 @@ if test "x$build_wacom" = "xtrue"; then
 	AC_MSG_NOTICE([** Wacom support (Wacom panel)])
 else
 	AC_MSG_NOTICE([   Wacom support disabled])
+fi
+
+if test "x$have_onlineaccounts" = "xyes"; then
+	AC_MSG_NOTICE([** Online-Accounts support (Online-Accounts panel)])
+else
+	AC_MSG_NOTICE([   Online-Accounts support disabled])
 fi
 
 AC_MSG_NOTICE([End options])
