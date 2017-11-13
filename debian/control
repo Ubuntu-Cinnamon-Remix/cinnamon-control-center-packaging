@@ -62,7 +62,7 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 3.6), cinnamon-core (<< 3.6)
+Breaks: cinnamon (<< 3.6), cinnamon-core (<< 3.6~)
 Recommends:
  cinnamon-l10n,
  iso-codes,
