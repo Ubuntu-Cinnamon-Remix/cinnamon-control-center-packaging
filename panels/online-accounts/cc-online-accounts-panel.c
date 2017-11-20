@@ -22,7 +22,7 @@
 
 #include <gio/gio.h>
 #include <string.h>
-#include <glib/gi18n-lib.h>
+#include <glib/gi18n.h>
 
 #define GOA_API_IS_SUBJECT_TO_CHANGE
 #include <goa/goa.h>
@@ -508,9 +508,9 @@ cc_goa_panel_class_init (CcGoaPanelClass *klass)
   object_class->finalize = cc_goa_panel_finalize;
   object_class->dispose = cc_goa_panel_dispose;
 
-  g_object_class_override_property (object_class, PROP_PARAMETERS, "parameters");
+  //g_object_class_override_property (object_class, PROP_PARAMETERS, "parameters");
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/control-center/online-accounts/online-accounts.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/cinnamon/control-center/online-accounts/online-accounts.ui");
 
   gtk_widget_class_bind_template_child (widget_class, CcGoaPanel, accounts_frame);
   gtk_widget_class_bind_template_child (widget_class, CcGoaPanel, accounts_listbox);
@@ -968,6 +968,7 @@ on_remove_button_clicked (CcGoaPanel *panel)
 void
 cc_goa_panel_register (GIOModule *module)
 {
+        textdomain (GETTEXT_PACKAGE);
         bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale");
         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
         cc_goa_panel_register_type (G_TYPE_MODULE (module));
