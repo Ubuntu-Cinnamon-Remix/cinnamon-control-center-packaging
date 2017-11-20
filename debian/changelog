@@ -1,6 +1,6 @@
-cinnamon-control-center (3.6.4-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.6.5-1~) UNRELEASED; urgency=medium
 
-  * New upstream release (3.6.4). (Closes: #857224)
+  * New upstream release (3.6.5). (Closes: #857224)
   * debian/control:
     add missed cinnamon-l10n to cinnamon-control-center recommends.
     remove very old gnome-power-manager, gdm and gnome-media-common breaks
