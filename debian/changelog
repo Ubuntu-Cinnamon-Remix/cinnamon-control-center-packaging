@@ -7,7 +7,8 @@ cinnamon-control-center (3.6.5-1~) UNRELEASED; urgency=medium
     update network manager build-deps
     add build-deps and dep to gnome-online-accounts
     bump group breaks (3.6)
-  * debian/patches: removed one no more needed patch and refresh the other.
+  * debian/patches: removed one no more needed patch and refresh another
+    add a patch with some network fixes including crashes
   * Update symbols.
 
  -- Fabio Fantoni <fantonifabio@tiscali.it>  Wed, 01 Nov 2017 15:46:29 +0100
