@@ -11,7 +11,7 @@ Build-Depends:
  automake,
  autotools-dev,
  cinnamon-settings-daemon-dev,
- debhelper (>= 9),
+ debhelper (>= 11~),
  dh-autoreconf,
  gnome-doc-utils (>= 0.3.2),
  gnome-pkg-tools (>= 0.10),
