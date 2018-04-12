@@ -1,1 +1,3 @@
 disable_silent_builds
+Stop-requiring-NetworkManager.pc.patch
+Drop-unused-HAVE_NETWORK_MANAGER.patch

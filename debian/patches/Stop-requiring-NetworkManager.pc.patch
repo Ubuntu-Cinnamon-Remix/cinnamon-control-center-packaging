@@ -1,0 +1,41 @@
+From: Michael Biebl <biebl@debian.org>
+Date: Thu, 12 Apr 2018 09:11:34 +0200
+Subject: Stop requiring NetworkManager.pc
+
+We don't actually use NM_VPN_CONFIG_DIR and NM_VPN_MODULE_DIR, along with the
+corresponding configure check.
+---
+ configure.ac                                 | 4 ----
+ panels/network/connection-editor/Makefile.am | 4 +---
+ 2 files changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index a67dbe3..dfee1f1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -157,10 +157,6 @@ if test "x$enable_networkmanager" = xyes; then
+ 
+     if test x${have_networkmanager} = xyes; then
+       AC_DEFINE(HAVE_NETWORK_MANAGER, 1, [Define to 1 if NetworkManager is available])
+-      NM_VPN_CONFIG_DIR=`$PKG_CONFIG --variable configdir NetworkManager`/VPN
+-      NM_VPN_MODULE_DIR=`$PKG_CONFIG --variable plugindir NetworkManager`
+-      AC_SUBST(NM_VPN_CONFIG_DIR)
+-      AC_SUBST(NM_VPN_MODULE_DIR)
+     fi
+ 
+     if test x${have_nma_18} = xyes; then
+diff --git a/panels/network/connection-editor/Makefile.am b/panels/network/connection-editor/Makefile.am
+index fe74aa7..4f4f642 100644
+--- a/panels/network/connection-editor/Makefile.am
++++ b/panels/network/connection-editor/Makefile.am
+@@ -37,9 +37,7 @@ libconnection_editor_la_CPPFLAGS = 		\
+ 	$(PANEL_CFLAGS)				\
+ 	-I$(srcdir)/../wireless-security	\
+ 	$(NETWORK_PANEL_CFLAGS) 		\
+-        $(NETWORK_MANAGER_CFLAGS)		\
+-	-DNM_VPN_CONFIG_DIR=\""$(NM_VPN_CONFIG_DIR)"\" \
+-	-DNM_VPN_MODULE_DIR=\""$(NM_VPN_MODULE_DIR)"\"
++        $(NETWORK_MANAGER_CFLAGS)
+ 
+ libconnection_editor_la_LIBADD = 		\
+ 	$(builddir)/../wireless-security/libwireless-security.la \
