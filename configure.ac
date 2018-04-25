@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 3.6.5)
+m4_define([cinnamon_control_center_version], 3.8.0)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -154,14 +154,6 @@ if test "x$enable_networkmanager" = xyes; then
     fi
 
     AC_DEFINE(BUILD_NETWORK, 1, [Define to 1 to build the Network panel])
-
-    if test x${have_networkmanager} = xyes; then
-      AC_DEFINE(HAVE_NETWORK_MANAGER, 1, [Define to 1 if NetworkManager is available])
-      NM_VPN_CONFIG_DIR=`$PKG_CONFIG --variable configdir NetworkManager`/VPN
-      NM_VPN_MODULE_DIR=`$PKG_CONFIG --variable plugindir NetworkManager`
-      AC_SUBST(NM_VPN_CONFIG_DIR)
-      AC_SUBST(NM_VPN_MODULE_DIR)
-    fi
 
     if test x${have_nma_18} = xyes; then
       AC_DEFINE(HAVE_NMA_18, 1, [Define to 1 if libnma ist >= 1.8.0])
