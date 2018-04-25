@@ -16,7 +16,7 @@ Build-Depends:
  gnome-pkg-tools (>= 0.10),
  gtk-doc-tools,
  intltool (>= 0.37.1),
- libcinnamon-desktop-dev (>= 3.6),
+ libcinnamon-desktop-dev (>= 3.8),
  libcinnamon-menu-3-dev,
  libcolord-dev,
  libdbus-1-dev (>= 0.32),
