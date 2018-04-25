@@ -9,7 +9,6 @@ Uploaders:
 Build-Depends:
  autoconf-archive,
  automake,
- autotools-dev,
  cinnamon-settings-daemon-dev,
  debhelper (>= 11~),
  gnome-doc-utils (>= 0.3.2),
