@@ -57,6 +57,7 @@ Depends:
  gettext,
  gnome-online-accounts,
  libcinnamon-control-center1 (= ${binary:Version}),
+ policykit-1-gnome,
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
@@ -66,7 +67,6 @@ Recommends:
  iso-codes,
  mesa-utils,
  mousetweaks,
- policykit-1-gnome,
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
