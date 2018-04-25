@@ -1,3 +1,10 @@
+cinnamon-control-center (3.8.0-1~) UNRELEASED; urgency=medium
+
+  * New upstream release (3.8.0).
+  * Drop 2 debian/patches applied upstream.
+
+ -- Fabio Fantoni <fantonifabio@tiscali.it>  Wed, 25 Apr 2018 16:04:51 +0200
+
 cinnamon-control-center (3.6.5-2) unstable; urgency=medium
 
   * New revision
