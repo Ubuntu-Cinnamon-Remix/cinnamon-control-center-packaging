@@ -50,8 +50,8 @@ Depends:
  accountsservice,
  apg,
  cinnamon-control-center-data (= ${source:Version}),
- cinnamon-desktop-data,
- cinnamon-settings-daemon,
+ cinnamon-desktop-data (>= 3.8),
+ cinnamon-settings-daemon (>= 3.8),
  desktop-file-utils,
  gettext,
  gnome-online-accounts,
@@ -60,12 +60,8 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 3.6), cinnamon-core (<< 3.6~)
-Recommends:
- cinnamon-l10n,
- iso-codes,
- mesa-utils,
- mousetweaks,
+Breaks: cinnamon (<< 3.8), cinnamon-core (<< 3.8~)
+Recommends: cinnamon-l10n (>= 3.8), iso-codes, mesa-utils, mousetweaks
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
