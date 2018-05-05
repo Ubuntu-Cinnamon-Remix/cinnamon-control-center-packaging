@@ -1,9 +1,16 @@
-cinnamon-control-center (3.8.0-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (3.8.0-1) experimental; urgency=medium
 
+  [ Fabio Fantoni ]
   * New upstream release (3.8.0).
   * Drop 2 debian/patches applied upstream.
+  * remove useless autoreconf build-depends autotools-dev
 
- -- Fabio Fantoni <fantonifabio@tiscali.it>  Wed, 25 Apr 2018 16:04:51 +0200
+  [ Maximiliano Curia ]
+  * Bump Standards-Version to 4.1.4.
+  * Bump group breaks (3.8)
+  * Release to experimental
+
+ -- Maximiliano Curia <maxy@debian.org>  Sat, 05 May 2018 14:30:04 +0200
 
 cinnamon-control-center (3.6.5-2) unstable; urgency=medium
 
