@@ -1,1 +1,4 @@
 disable_silent_builds
+Avoid-listing-common-twice.patch
+Clean-BUILT_SOURCES.patch
+Also-clean-the-generated-policy-file.patch

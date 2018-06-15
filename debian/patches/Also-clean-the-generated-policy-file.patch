@@ -1,0 +1,21 @@
+From: Maximiliano Curia <maxy@gnuservers.com.ar>
+Date: Fri, 15 Jun 2018 13:56:58 +0200
+Subject: Also clean the generated policy file
+
+---
+ panels/datetime/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/panels/datetime/Makefile.am b/panels/datetime/Makefile.am
+index 05684ff..9e82aab 100644
+--- a/panels/datetime/Makefile.am
++++ b/panels/datetime/Makefile.am
+@@ -189,7 +189,7 @@ polkit_in_files = org.cinnamon.controlcenter.datetime.policy.in
+ @INTLTOOL_POLICY_RULE@
+ polkit_DATA = $(polkit_in_files:.policy.in=.policy)
+ 
+-CLEANFILES = $(built_sources)
++CLEANFILES = $(polkit_DATA) $(built_sources)
+ 
+ MAINTAINERCLEANFILES =          \
+ 	Makefile.in

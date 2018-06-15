@@ -1,0 +1,22 @@
+From: Maximiliano Curia <maxy@gnuservers.com.ar>
+Date: Fri, 15 Jun 2018 13:36:50 +0200
+Subject: Avoid listing common twice
+
+Otherwise distclean fails when trying to distclean common again
+---
+ panels/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/panels/Makefile.am b/panels/Makefile.am
+index 76d80dd..ac7e33e 100644
+--- a/panels/Makefile.am
++++ b/panels/Makefile.am
+@@ -32,7 +32,7 @@ else
+ disabled_panels += online-accounts
+ endif
+ 
+-SUBDIRS = common $(enabled_panels)
++SUBDIRS = $(enabled_panels)
+ DIST_SUBDIRS = $(SUBDIRS) $(disabled_panels)
+ 
+ -include $(top_srcdir)/git.mk
