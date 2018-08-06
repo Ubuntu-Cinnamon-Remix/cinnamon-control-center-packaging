@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 3.8.0)
+m4_define([cinnamon_control_center_version], 3.8.1)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -273,7 +273,7 @@ if test x$WANT_WACOM = xyes; then
                   cinnamon-desktop
                   gtk+-3.0 >= 3.8.0])
         build_wacom="true"
-        AC_DEFINE(HAVE_WACOM, 1, [Define if wacom is being build])]
+        AC_DEFINE(HAVE_WACOM, 1, [Define if wacom is being build])
 fi
 AM_CONDITIONAL(BUILD_WACOM, test "x$build_wacom" = "xtrue")
 AC_SUBST(WACOM_PANEL_CFLAGS)
