@@ -1,3 +1,29 @@
+cinnamon-control-center (4.0.1) tessa; urgency=medium
+
+  * Wacom: Add a switch to set automatic rotation
+  * Wacom: Don't disable auto-rotation when disabling monitor mapping
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 06 Dec 2018 13:22:49 +0000
+
+cinnamon-control-center (4.0.0) tessa; urgency=medium
+
+  [ Germán Franco ]
+  * Add "Internet" and "WiFi" keywords to the network settings entry (#213)
+
+  [ Clement Lefebvre ]
+  * CI: Remove Mint 18
+  * l10n: Update POT and additional files
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 30 Oct 2018 14:47:53 +0000
+
+cinnamon-control-center (3.8.2) tara; urgency=medium
+
+  [ Michael Webster ]
+  * wacom: Update to support 3-button and 3D styli.
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 11 Sep 2018 14:47:17 +0100
+
 cinnamon-control-center (3.8.1) tara; urgency=medium
 
   [ Michael Webster ]
