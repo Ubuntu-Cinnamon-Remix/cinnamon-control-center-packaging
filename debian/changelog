@@ -4,11 +4,17 @@ cinnamon-control-center (4.2.2-1~) UNRELEASED; urgency=medium
 
  -- Norbert Preining <norbert@preining.info>  Thu, 29 Aug 2019 13:18:52 +0900
 
-cinnamon-control-center (4.0.1-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (4.0.1-1) unstable; urgency=medium
 
+  [ Norbert Preining ]
   * New upstream release (4.0.1)
 
- -- Norbert Preining <preining@debian.org>  Tue, 11 Dec 2018 19:17:29 +0900
+  [ Maximiliano Curia ]
+  * Add a basic gbp.conf
+  * Add a debian/salsa-ci.yml file
+  * Release to unstable
+
+ -- Maximiliano Curia <maxy@debian.org>  Thu, 29 Aug 2019 12:04:53 -0300
 
 cinnamon-control-center (3.8.1-1) unstable; urgency=medium
 
