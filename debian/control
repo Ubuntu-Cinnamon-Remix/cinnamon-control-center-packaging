@@ -15,7 +15,7 @@ Build-Depends:
  gnome-pkg-tools (>= 0.10),
  gtk-doc-tools,
  intltool (>= 0.37.1),
- libcinnamon-desktop-dev (>= 4.0),
+ libcinnamon-desktop-dev (>= 4.2),
  libcinnamon-menu-3-dev,
  libcolord-dev,
  libdbus-1-dev (>= 0.32),
@@ -50,8 +50,8 @@ Depends:
  accountsservice,
  apg,
  cinnamon-control-center-data (= ${source:Version}),
- cinnamon-desktop-data (>= 4.0),
- cinnamon-settings-daemon (>= 4.0),
+ cinnamon-desktop-data (>= 4.2),
+ cinnamon-settings-daemon (>= 4.2),
  desktop-file-utils,
  gettext,
  gnome-online-accounts,
@@ -60,8 +60,8 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 4.0), cinnamon-core (<< 4.0~)
-Recommends: cinnamon-l10n (>= 4.0), iso-codes, mesa-utils, mousetweaks
+Breaks: cinnamon (<< 4.2), cinnamon-core (<< 4.2~)
+Recommends: cinnamon-l10n (>= 4.2), iso-codes, mesa-utils, mousetweaks
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
