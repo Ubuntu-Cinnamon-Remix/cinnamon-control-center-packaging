@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 4.0.1)
+m4_define([cinnamon_control_center_version], 4.2.2)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -441,7 +441,6 @@ panels/wacom/cinnamon-wacom-panel.desktop.in
 panels/datetime/Makefile
 panels/datetime/po-timezones/Makefile
 panels/online-accounts/Makefile
-panels/online-accounts/cinnamon-online-accounts-panel.desktop.in
 panels/online-accounts/icons/Makefile
 panels/online-accounts/icons/16x16/Makefile
 panels/online-accounts/icons/22x22/Makefile
