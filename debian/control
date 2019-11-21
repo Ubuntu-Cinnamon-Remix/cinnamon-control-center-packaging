@@ -54,19 +54,37 @@ Depends:
  cinnamon-settings-daemon (>= 4.2),
  desktop-file-utils,
  gettext,
- gnome-online-accounts,
  libcinnamon-control-center1 (= ${binary:Version}),
  policykit-1-gnome,
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
 Breaks: cinnamon (<< 4.2), cinnamon-core (<< 4.2~)
-Recommends: cinnamon-l10n (>= 4.2), iso-codes, mesa-utils, mousetweaks
+Recommends: cinnamon-l10n (>= 4.2), iso-codes, mesa-utils, mousetweaks,
+ cinnamon-control-center-goa
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
  This package contains configuration applets for the Cinnamon desktop,
  allowing to set the date and time, regional settings, network configuration,
  screen resolution, and other Cinnamon parameters.
+
+Package: cinnamon-control-center-goa
+Architecture: any
+Depends:
+ cinnamon-control-center (= ${binary:Version}),
+ gnome-online-accounts,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Breaks: 
+ cinnamon (<< 4.2),
+ cinnamon-core (<< 4.2~),
+ cinnamon-control-center (<< ${source:Version})
+Recommends: cinnamon-l10n (>= 4.2), iso-codes, mesa-utils, mousetweaks
+Suggests: x11-xserver-utils
+Replaces: cinnamon-control-center (<< ${source:Version})
+Description: configuration applets for the Cinnamon desktop - Gnome Online Account
+ This package contains configuration applets for the Cinnamon desktop, that
+ use Gnome Online Accounts.
 
 Package: cinnamon-control-center-data
 Architecture: all
