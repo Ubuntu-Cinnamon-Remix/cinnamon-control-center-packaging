@@ -1,3 +1,9 @@
+cinnamon-control-center (4.4.0-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Norbert Preining <norbert@preining.info>  Tue, 04 Feb 2020 08:35:04 +0900
+
 cinnamon-control-center (4.4.0-1) experimental; urgency=medium
 
   * Drop gnome-doc-utils from B-D (Closes: #945138)
