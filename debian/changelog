@@ -1,3 +1,9 @@
+cinnamon-control-center (4.4.0-3) UNRELEASED; urgency=medium
+
+  * Drop dbus-glib dependency (Closes: #955828)
+
+ -- Norbert Preining <norbert@preining.info>  Fri, 10 Apr 2020 13:56:34 +0900
+
 cinnamon-control-center (4.4.0-2) unstable; urgency=medium
 
   * Upload to unstable.
