@@ -22,6 +22,7 @@
 #include <config.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <sys/wait.h>
 
 #include "cc-display-panel.h"
@@ -50,6 +51,9 @@ CC_PANEL_REGISTER (CcDisplayPanel, cc_display_panel)
 #define MINIMUM_WIDTH 675
 #define MINIMUM_HEIGHT 530
 
+#define INTERFACE_SETTINGS_SCHEMA "org.cinnamon.desktop.interface"
+// #define UPSCALE_SETTINGS_KEY "upscale-fractional-scaling"
+
 enum {
   TEXT_COL,
   WIDTH_COL,
@@ -57,7 +61,18 @@ enum {
   RATE_COL,
   SORT_COL,
   ROTATION_COL,
+  SCALE_COL,
+  DSCAN_COL,
+  ILACED_COL,
+  VSYNC_COL,
+  PREF_COL,
   NUM_COLS
+};
+
+enum {
+  BASE_SCALE_TEXT_COL,
+  BASE_SCALE_VALUE_COL,
+  BASE_SCALE_NUM_COLS
 };
 
 struct _CcDisplayPanelPrivate
@@ -66,6 +81,7 @@ struct _CcDisplayPanelPrivate
   GnomeRRConfig  *current_configuration;
   CcRRLabeler *labeler;
   GnomeRROutputInfo         *current_output;
+  // GSettings      *interface_settings;
 
   GtkBuilder     *builder;
   guint           focus_id;
@@ -79,9 +95,11 @@ struct _CcDisplayPanelPrivate
   GtkListStore   *resolution_store;
   GtkWidget      *resolution_combo;
   GtkWidget      *rotation_combo;
-  GtkWidget      *clone_checkbox;
+  GtkWidget      *refresh_combo;
+  GtkWidget      *clone_switch;
   GtkWidget      *clone_label;
-  GtkWidget      *show_icon_checkbox;
+  GtkWidget      *scale_combo;
+  GtkWidget      *base_scale_combo;
 
   /* We store the event timestamp when the Apply button is clicked */
   guint32         apply_button_clicked_timestamp;
@@ -102,20 +120,27 @@ typedef struct
 } GrabInfo;
 
 static void rebuild_gui (CcDisplayPanel *self);
-static void on_clone_changed (GtkWidget *box, gpointer data);
-static gboolean output_overlaps (GnomeRROutputInfo *output, GnomeRRConfig *config);
+static void on_clone_changed (GtkWidget *box, gboolean state, gpointer data);
+static void on_scale_changed (GtkComboBox *box, gpointer data);
+static void on_resolution_changed (GtkComboBox *box, gpointer data);
+static void on_refresh_changed (GtkComboBox *box, gpointer data);
+static void on_rotation_changed (GtkComboBox *box, gpointer data);
+static void on_base_scale_changed (GtkComboBox *box, gpointer data);
+static void rebuild_base_scale_combo (CcDisplayPanel *self);
+static gboolean output_overlaps (CcDisplayPanel *self, GnomeRROutputInfo *output, GnomeRRConfig *config);
 static void select_current_output_from_dialog_position (CcDisplayPanel *self);
 static void monitor_switch_active_cb (GObject *object, GParamSpec *pspec, gpointer data);
 static void primary_button_clicked_cb (GObject *object, gpointer data);
-static void get_geometry (GnomeRROutputInfo *output, int *w, int *h);
+static void get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *w, int *h);
 static void apply_configuration_returned_cb (GObject *proxy, GAsyncResult *res, gpointer data);
 static gboolean get_clone_size (GnomeRRScreen *screen, int *width, int *height);
 static gboolean output_info_supports_mode (CcDisplayPanel *self, GnomeRROutputInfo *info, int width, int height);
-static char *make_resolution_string (int width, int height);
+static char *make_resolution_string (int width, int height, gboolean interlaced);
+static char *make_refresh_string (double rate, gboolean preferred, gboolean doublescan, gboolean interlaced, gboolean vsync);
 static GObject *cc_display_panel_constructor (GType                  gtype,
 					      guint                  n_properties,
 					      GObjectConstructParam *properties);
-static void on_screen_changed (GnomeRRScreen *scr, gpointer data);
+static void on_screen_changed (gpointer data);
 
 static void
 cc_display_panel_get_property (GObject    *object,
@@ -146,6 +171,10 @@ cc_display_panel_set_property (GObject      *object,
 static void
 cc_display_panel_dispose (GObject *object)
 {
+  CcDisplayPanel *panel = CC_DISPLAY_PANEL (object);
+
+  // g_clear_object (&panel->priv->interface_settings);
+
   G_OBJECT_CLASS (cc_display_panel_parent_class)->dispose (object);
 }
 
@@ -159,6 +188,7 @@ cc_display_panel_finalize (GObject *object)
   self = CC_DISPLAY_PANEL (object);
 
   g_signal_handlers_disconnect_by_func (self->priv->screen, on_screen_changed, self);
+  g_signal_handlers_disconnect_by_func (self, on_screen_changed, self);
   g_object_unref (self->priv->screen);
   g_object_unref (self->priv->builder);
 
@@ -222,6 +252,93 @@ error_message (CcDisplayPanel *self, const char *primary_text, const char *secon
   gtk_widget_destroy (dialog);
 }
 
+static void
+update_base_scale (CcDisplayPanel *self)
+{
+  int i;
+  float max_scale = 1.0;
+  float min_scale = 4.0;
+  gint old_base_scale;
+
+  GnomeRROutputInfo **outputs = gnome_rr_config_get_outputs (self->priv->current_configuration);
+
+  for (i = 0; outputs[i] != NULL; ++i)
+    {
+      float info_scale = gnome_rr_output_info_get_scale (outputs[i]);
+
+      if (info_scale > max_scale)
+        {
+          max_scale = info_scale;
+        }
+
+      if (info_scale < min_scale)
+        {
+          min_scale = info_scale;
+        }
+    }
+
+  old_base_scale = gnome_rr_config_get_base_scale (self->priv->current_configuration);
+
+  if (old_base_scale > (int) ceilf (max_scale))
+  {
+    gnome_rr_config_set_base_scale (self->priv->current_configuration, (int) ceilf (max_scale));
+
+    g_debug ("Update to base scale (it was 1 or more steps larger than any monitor scale: %d->%d\n",
+             old_base_scale, (int) ceilf (max_scale));
+
+    rebuild_base_scale_combo (self);
+  }
+  else if (old_base_scale < (int) floorf (min_scale))
+  {
+    gnome_rr_config_set_base_scale (self->priv->current_configuration, (int) floorf (min_scale));
+
+    g_debug ("Update to base scale (it was 1 or more steps smaller than any monitor scale: %d->%d\n",
+             old_base_scale, (int) floorf (min_scale));
+
+    rebuild_base_scale_combo (self);
+  }
+}
+
+static void
+get_scaled_geometry (CcDisplayPanel *self,
+                     GnomeRROutputInfo *info,
+                     int *x,     int *y,
+                     int *width, int *height)
+{
+    g_return_if_fail (GNOME_IS_RR_OUTPUT_INFO (info));
+    float scale;
+
+    gnome_rr_output_info_get_geometry (info, x, y, width, height);
+
+    if (!width || !height)
+        return;
+
+    scale = 1 / (gnome_rr_output_info_get_scale (info) / gnome_rr_config_get_base_scale (self->priv->current_configuration));
+
+    if (width)
+      *width = floor (*width * scale);
+
+    if (height)
+      *height = floor (*height * scale);
+}
+
+static void
+set_scaled_geometry (CcDisplayPanel *self,
+                     GnomeRROutputInfo *info,
+                     int x,     int y,
+                     int width, int height)
+{
+    float scale;
+    g_return_if_fail (GNOME_IS_RR_OUTPUT_INFO (info));
+
+    scale = 1 / (gnome_rr_output_info_get_scale (info) / gnome_rr_config_get_base_scale (self->priv->current_configuration));
+
+    width = ceilf (width / scale);
+    height = ceilf (height / scale);
+
+    gnome_rr_output_info_set_geometry (info, x, y, width, height);
+}
+
 static gboolean
 should_show_resolution (gint output_width,
                         gint output_height,
@@ -236,12 +353,29 @@ should_show_resolution (gint output_width,
   return FALSE;
 }
 
+static gboolean
+should_show_rate (gint output_width,
+                  gint output_height,
+                  gint width,
+                  gint height)
+{
+  if (width == output_width &&
+      height == output_height)
+    {
+      return TRUE;
+    }
+  return FALSE;
+}
+
 static void
-on_screen_changed (GnomeRRScreen *scr,
-                   gpointer data)
+on_screen_changed (gpointer data)
 {
   GnomeRRConfig *current;
   CcDisplayPanel *self = data;
+
+  g_debug ("GnomeRRScreen::changed");
+
+  gnome_rr_screen_refresh (self->priv->screen, NULL);
 
   current = gnome_rr_config_new_current (self->priv->screen, NULL);
   gnome_rr_config_ensure_primary (current);
@@ -261,6 +395,8 @@ on_screen_changed (GnomeRRScreen *scr,
 
   cc_rr_labeler_hide (self->priv->labeler);
   cc_rr_labeler_show (self->priv->labeler);
+
+  update_base_scale (self);
 
   select_current_output_from_dialog_position (self);
 
@@ -336,7 +472,7 @@ static void
 add_key (GtkTreeModel *model,
          const char *text,
          gboolean preferred,
-         int width, int height, int rate,
+         int width, int height, double rate,
          GnomeRRRotation rotation)
 {
   ForeachInfo info;
@@ -349,7 +485,7 @@ add_key (GtkTreeModel *model,
   if (!info.found)
     {
       GtkTreeIter iter;
-      g_debug ("adding %s with rate %d Hz", text, rate);
+      g_debug ("adding %s with rate %.2f Hz", text, rate);
       gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, -1,
                                          TEXT_COL, text,
                                          WIDTH_COL, width,
@@ -357,6 +493,7 @@ add_key (GtkTreeModel *model,
                                          RATE_COL, rate,
                                          SORT_COL, width * 10000 + height,
                                          ROTATION_COL, rotation,
+                                         PREF_COL, preferred,
                                          -1);
       return;
     }
@@ -364,7 +501,7 @@ add_key (GtkTreeModel *model,
   /* Look, the preferred output, replace the old one */
   if (preferred)
     {
-      g_debug ("replacing %s with rate %d Hz (preferred mode)", text, rate);
+      g_debug ("replacing %s with rate %.2f Hz (preferred mode)", text, rate);
       gtk_list_store_set (GTK_LIST_STORE (model), &info.iter,
                           RATE_COL, rate,
                           -1);
@@ -372,7 +509,7 @@ add_key (GtkTreeModel *model,
     }
 
   {
-    int old_rate;
+    double old_rate;
 
     gtk_tree_model_get (model, &info.iter,
                         RATE_COL, &old_rate,
@@ -381,7 +518,7 @@ add_key (GtkTreeModel *model,
     /* Higher refresh rate */
     if (rate > old_rate)
     {
-      g_debug ("replacing %s with rate %d Hz (old rate: %d)", text, rate, old_rate);
+      g_debug ("replacing %s with rate %.2f Hz (old rate: %.2f)", text, rate, old_rate);
       gtk_list_store_set (GTK_LIST_STORE (model), &info.iter,
                           RATE_COL, rate,
                           -1);
@@ -389,7 +526,7 @@ add_key (GtkTreeModel *model,
     }
   }
 
-  g_debug ("not adding %s with rate %d Hz (higher rate already there)", text, rate);
+  g_debug ("not adding %s with rate %.2f Hz (higher rate already there)", text, rate);
 }
 
 static void
@@ -399,11 +536,14 @@ add_mode (CcDisplayPanel *self,
 	  gint  output_height,
 	  guint preferred_id)
 {
-  int width, height, rate;
+  int width, height;
+  double rate;
+  gboolean interlaced;
 
   width = gnome_rr_mode_get_width (mode);
   height = gnome_rr_mode_get_height (mode);
-  rate = gnome_rr_mode_get_freq (mode);
+  rate = gnome_rr_mode_get_freq_f (mode);
+  gnome_rr_mode_get_flags (mode, NULL, &interlaced, NULL);
 
   if (should_show_resolution (output_width, output_height, width, height))
     {
@@ -411,14 +551,82 @@ add_mode (CcDisplayPanel *self,
       gboolean preferred;
 
       preferred = (gnome_rr_mode_get_id (mode) == preferred_id);
-      text = make_resolution_string (width, height);
+      text = make_resolution_string (width, height, interlaced);
       add_key (gtk_combo_box_get_model (GTK_COMBO_BOX (self->priv->resolution_combo)),
                text, preferred, width, height, rate, -1);
       g_free (text);
     }
 }
 
+static void
+add_rate (CcDisplayPanel *self,
+          GnomeRRMode    *mode,
+          gint            output_width,
+          gint            output_height,
+          double          highest_rate,
+          guint32         preferred_id)
+{
+  int width, height;
+  double rate;
+  gboolean doublescan, interlaced, vsync;
 
+  width = gnome_rr_mode_get_width (mode);
+  height = gnome_rr_mode_get_height (mode);
+  rate = gnome_rr_mode_get_freq_f (mode);
+
+  gnome_rr_mode_get_flags (mode, &doublescan, &interlaced, &vsync);
+
+  if (should_show_rate (output_width, output_height, width, height))
+    {
+      GtkListStore *model;
+      char *text;
+      gboolean preferred;
+
+      model = gtk_combo_box_get_model (GTK_COMBO_BOX (self->priv->refresh_combo));
+      preferred = (gnome_rr_mode_get_id (mode) == preferred_id);
+
+      text = make_refresh_string (rate, rate == highest_rate, doublescan, interlaced, vsync);
+
+      g_debug ("adding rate %.2f for resolution: %dx%d", rate, width, height);
+      gtk_list_store_insert_with_values (GTK_LIST_STORE (model), NULL, -1,
+                                         TEXT_COL, text,
+                                         RATE_COL, rate,
+                                         SORT_COL, (int)(rate * 1000),
+                                         DSCAN_COL, doublescan,
+                                         ILACED_COL, interlaced,
+                                         VSYNC_COL, vsync,
+                                         PREF_COL, preferred,
+                                         -1);
+
+      g_free (text);
+    }
+}
+
+static void
+add_scale (CcDisplayPanel *self,
+           float           scale,
+           gint            width,
+           gint            height)
+{
+  GtkListStore *model;
+  char *text;
+
+  model = gtk_combo_box_get_model (GTK_COMBO_BOX (self->priv->scale_combo));
+
+  text = g_strdup_printf (_("%d%%"), (int) (scale * 100));
+
+  g_debug ("adding scale %.2f", scale);
+
+  gtk_list_store_insert_with_values (GTK_LIST_STORE (model), NULL, -1,
+                                     TEXT_COL, text,
+                                     WIDTH_COL, width,
+                                     HEIGHT_COL, height,
+                                     SCALE_COL, scale,
+                                     SORT_COL, (int)(scale * 1000),
+                                     -1);
+
+  g_free (text);
+}
 
 static gboolean
 combo_select (GtkWidget *widget, const char *text)
@@ -481,13 +689,18 @@ rebuild_rotation_combo (CcDisplayPanel *self)
   GnomeRRRotation current;
   int i;
 
+  g_signal_handlers_block_by_func (self->priv->rotation_combo, on_rotation_changed, self);
+
   clear_combo (self->priv->rotation_combo);
 
   gtk_widget_set_sensitive (self->priv->rotation_combo,
                             self->priv->current_output && gnome_rr_output_info_is_active (self->priv->current_output));
 
   if (!self->priv->current_output)
-    return;
+  {
+      g_signal_handlers_unblock_by_func (self->priv->rotation_combo, on_rotation_changed, self);
+      return;
+  }
 
   current = gnome_rr_output_info_get_rotation (self->priv->current_output);
 
@@ -512,6 +725,8 @@ rebuild_rotation_combo (CcDisplayPanel *self)
 
   if (!(selection && combo_select (self->priv->rotation_combo, selection)))
     gtk_combo_box_set_active (GTK_COMBO_BOX (self->priv->rotation_combo), 0);
+
+  g_signal_handlers_unblock_by_func (self->priv->rotation_combo, on_rotation_changed, self);
 }
 
 static int
@@ -590,18 +805,18 @@ rebuild_mirror_screens (CcDisplayPanel *self)
   gboolean mirror_is_active;
   gboolean mirror_is_supported;
 
-  g_signal_handlers_block_by_func (self->priv->clone_checkbox, G_CALLBACK (on_clone_changed), self);
+  g_signal_handlers_block_by_func (self->priv->clone_switch, G_CALLBACK (on_clone_changed), self);
 
   mirror_is_active = self->priv->current_configuration && gnome_rr_config_get_clone (self->priv->current_configuration);
 
   /* If mirror_is_active, then it *must* be possible to turn mirroring off */
   mirror_is_supported = mirror_is_active || mirror_screens_is_supported (self);
 
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (self->priv->clone_checkbox), mirror_is_active);
-  gtk_widget_set_sensitive (self->priv->clone_checkbox, mirror_is_supported);
+  gtk_switch_set_active (GTK_SWITCH (self->priv->clone_switch), mirror_is_active);
+  gtk_widget_set_sensitive (self->priv->clone_switch, mirror_is_supported);
   gtk_widget_set_sensitive (self->priv->clone_label, mirror_is_supported);
 
-  g_signal_handlers_unblock_by_func (self->priv->clone_checkbox, G_CALLBACK (on_clone_changed), self);
+  g_signal_handlers_unblock_by_func (self->priv->clone_switch, G_CALLBACK (on_clone_changed), self);
 }
 
 static char *
@@ -701,7 +916,7 @@ rebuild_on_off_radios (CcDisplayPanel *self)
 }
 
 static char *
-make_resolution_string (int width, int height)
+make_resolution_string (int width, int height, gboolean interlaced)
 {
   int ratio;
   const char *aspect = NULL;
@@ -742,13 +957,67 @@ make_resolution_string (int width, int height)
   }
 
   if (aspect != NULL)
-    return g_strdup_printf (_("%d x %d (%s)"), width, height, aspect);
+    return g_strdup_printf (_("%d x %d%s (%s)"), width, height, interlaced ? "i" : "", aspect);
   else
-    return g_strdup_printf (_("%d x %d"), width, height);
+    return g_strdup_printf (_("%d x %d%s"), width, height, interlaced ? "i" : "");
+}
+
+static char *
+make_refresh_string (double    rate,
+                     gboolean  preferred,
+                     gboolean  doublescan,
+                     gboolean  interlaced,
+                     gboolean  vsync)
+{
+  if (doublescan || interlaced)
+  {
+    rate /= 2.0f;
+  }
+
+  return g_strdup_printf (_("%.2lf Hz"), rate);
 }
 
 static void
-find_best_mode (GnomeRRMode **modes, int *out_width, int *out_height)
+find_highest_rate (GnomeRRMode **modes,
+                   int for_w, int for_h,
+                   double *out_rate,
+                   gboolean *out_doublescan,
+                   gboolean *out_interlaced,
+                   gboolean *out_vsync)
+{
+  int i;
+
+  *out_rate = 0;
+
+  for (i = 0; modes[i] != NULL; i++)
+    {
+      int w, h;
+      double rate;
+
+      w = gnome_rr_mode_get_width (modes[i]);
+      h = gnome_rr_mode_get_height (modes[i]);
+      rate = gnome_rr_mode_get_freq_f (modes[i]);
+
+      if (w != for_w || h != for_h)
+        {
+          continue;
+        }
+
+      if (rate > *out_rate)
+        {
+          *out_rate = rate;
+          gnome_rr_mode_get_flags (modes[i], out_doublescan, out_interlaced, out_vsync);
+        }
+    }
+}
+
+static void
+find_best_mode (GnomeRRMode **modes,
+                int          *out_width,
+                int          *out_height,
+                gboolean     *out_doublescan,
+                gboolean     *out_interlaced,
+                gboolean     *out_vsync)
 {
   int i;
 
@@ -766,6 +1035,7 @@ find_best_mode (GnomeRRMode **modes, int *out_width, int *out_height)
         {
           *out_width = w;
           *out_height = h;
+          gnome_rr_mode_get_flags (modes[i], out_doublescan, out_interlaced, out_vsync);
         }
     }
 }
@@ -775,11 +1045,14 @@ rebuild_resolution_combo (CcDisplayPanel *self)
 {
   int i;
   GnomeRRMode **modes;
-  GnomeRRMode *mode;
+  GnomeRRMode *pref_mode;
   char *current;
   int output_width, output_height;
   guint32 preferred_id;
   GnomeRROutput *output;
+  gboolean interlaced, output_interlaced;
+
+  g_signal_handlers_block_by_func (self->priv->resolution_combo, on_resolution_changed, self);
 
   clear_combo (self->priv->resolution_combo);
 
@@ -787,7 +1060,79 @@ rebuild_resolution_combo (CcDisplayPanel *self)
       || !self->priv->current_output
       || !gnome_rr_output_info_is_active (self->priv->current_output))
     {
+      g_signal_handlers_unblock_by_func (self->priv->resolution_combo, on_resolution_changed, self);
+
       gtk_widget_set_sensitive (self->priv->resolution_combo, FALSE);
+      return;
+    }
+
+  g_assert (self->priv->current_output != NULL);
+
+  gnome_rr_output_info_get_geometry (self->priv->current_output, NULL, NULL, &output_width, &output_height);
+  gnome_rr_output_info_get_flags (self->priv->current_output, NULL, &output_interlaced, NULL);
+
+  g_assert (output_width != 0 && output_height != 0);
+
+  gtk_widget_set_sensitive (self->priv->resolution_combo, TRUE);
+
+  output = gnome_rr_screen_get_output_by_name (self->priv->screen,
+                                               gnome_rr_output_info_get_name (self->priv->current_output));
+  pref_mode = gnome_rr_output_get_preferred_mode (output);
+  preferred_id = gnome_rr_mode_get_id (pref_mode);
+
+  for (i = 0; modes[i] != NULL; ++i)
+    add_mode (self, modes[i], output_width, output_height, preferred_id);
+
+  /* And force the preferred mode in the drop-down (when not in clone mode)
+   * https://bugzilla.gnome.org/show_bug.cgi?id=680969 */
+  if (!gnome_rr_config_get_clone (self->priv->current_configuration))
+   add_mode (self, pref_mode, output_width, output_height, preferred_id);
+
+  gnome_rr_mode_get_flags (pref_mode, NULL, &interlaced, NULL);
+  current = make_resolution_string (output_width, output_height, output_interlaced);
+
+  if (!combo_select (self->priv->resolution_combo, current))
+    {
+      int best_w, best_h;
+      char *str;
+      gboolean best_interlaced, best_doublescan, best_vsync;
+
+      find_best_mode (modes, &best_w, &best_h, &best_doublescan, &best_interlaced, &best_vsync);
+      str = make_resolution_string (best_w, best_h, best_interlaced);
+      combo_select (self->priv->resolution_combo, str);
+      g_free (str);
+    }
+
+  g_signal_handlers_unblock_by_func (self->priv->resolution_combo, on_resolution_changed, self);
+
+  g_free (current);
+}
+
+static void
+rebuild_refresh_combo (CcDisplayPanel *self)
+{
+  int i;
+  GnomeRRMode **modes;
+  GnomeRRMode *pref_mode;
+  GnomeRROutput *output;
+  char *current;
+  guint32 preferred_id;
+  int output_width, output_height;
+  double current_rate, highest_rate;
+  gboolean highest_doublescan, highest_interlaced, highest_vsync;
+  gboolean output_doublescan, output_interlaced, output_vsync;
+
+  g_signal_handlers_block_by_func (self->priv->refresh_combo, on_refresh_changed, self);
+
+  clear_combo (self->priv->refresh_combo);
+
+  if (!(modes = get_current_modes (self))
+      || !self->priv->current_output
+      || !gnome_rr_output_info_is_active (self->priv->current_output))
+    {
+      g_signal_handlers_unblock_by_func (self->priv->refresh_combo, on_refresh_changed, self);
+
+      gtk_widget_set_sensitive (self->priv->refresh_combo, FALSE);
       return;
     }
 
@@ -796,35 +1141,272 @@ rebuild_resolution_combo (CcDisplayPanel *self)
   gnome_rr_output_info_get_geometry (self->priv->current_output, NULL, NULL, &output_width, &output_height);
   g_assert (output_width != 0 && output_height != 0);
 
-  gtk_widget_set_sensitive (self->priv->resolution_combo, TRUE);
+  gtk_widget_set_sensitive (self->priv->refresh_combo, TRUE);
+
+  find_highest_rate (modes, output_width, output_height,
+                     &highest_rate,
+                     &highest_doublescan,
+                     &highest_interlaced,
+                     &highest_vsync);
 
   output = gnome_rr_screen_get_output_by_name (self->priv->screen,
                                                gnome_rr_output_info_get_name (self->priv->current_output));
-  mode = gnome_rr_output_get_preferred_mode (output);
-  preferred_id = gnome_rr_mode_get_id (mode);
+  pref_mode = gnome_rr_output_get_preferred_mode (output);
+  preferred_id = gnome_rr_mode_get_id (pref_mode);
 
   for (i = 0; modes[i] != NULL; ++i)
-    add_mode (self, modes[i], output_width, output_height, preferred_id);
+    add_rate (self, modes[i], output_width, output_height, highest_rate, preferred_id);
 
-  /* And force the preferred mode in the drop-down (when not in clone mode)
-   * https://bugzilla.gnome.org/show_bug.cgi?id=680969 */
-  if (!gnome_rr_config_get_clone (self->priv->current_configuration))
-   add_mode (self, mode, output_width, output_height, preferred_id);
+  current_rate = gnome_rr_output_info_get_refresh_rate_f (self->priv->current_output);
+  gnome_rr_output_info_get_flags (self->priv->current_output, &output_doublescan, &output_interlaced, &output_vsync);
 
-  current = make_resolution_string (output_width, output_height);
+  // legacy behavior - best rate is the highest - is this always true?
+  current = make_refresh_string (current_rate,
+                                 current_rate == highest_rate,
+                                 output_doublescan,
+                                 output_interlaced,
+                                 output_vsync);
 
-  if (!combo_select (self->priv->resolution_combo, current))
+  if (!combo_select (self->priv->refresh_combo, current))
     {
-      int best_w, best_h;
       char *str;
 
-      find_best_mode (modes, &best_w, &best_h);
-      str = make_resolution_string (best_w, best_h);
-      combo_select (self->priv->resolution_combo, str);
+      str = make_refresh_string (highest_rate, TRUE, highest_doublescan, highest_interlaced, highest_vsync);
+      combo_select (self->priv->refresh_combo, str);
       g_free (str);
     }
 
+  g_signal_handlers_unblock_by_func (self->priv->refresh_combo, on_refresh_changed, self);
+
   g_free (current);
+}
+
+static void
+rebuild_scale_combo (CcDisplayPanel *self)
+{
+  int i;
+  GnomeRRMode **modes;
+  char *current;
+  int output_width, output_height, n_supported_scales;
+  float current_scale;
+  float *scales;
+
+  g_signal_handlers_block_by_func (self->priv->scale_combo, on_scale_changed, self);
+
+  clear_combo (self->priv->scale_combo);
+
+  if (!(modes = get_current_modes (self))
+      || !self->priv->current_output
+      || !gnome_rr_output_info_is_active (self->priv->current_output))
+    {
+      g_signal_handlers_unblock_by_func (self->priv->scale_combo, on_scale_changed, self);
+
+      gtk_widget_set_sensitive (self->priv->scale_combo, FALSE);
+      return;
+    }
+
+  g_assert (self->priv->current_output != NULL);
+
+  gnome_rr_output_info_get_geometry (self->priv->current_output, NULL, NULL, &output_width, &output_height);
+  g_assert (output_width != 0 && output_height != 0);
+
+  gtk_widget_set_sensitive (self->priv->scale_combo, TRUE);
+
+  scales = gnome_rr_screen_calculate_supported_scales (self->priv->screen,
+                                                       output_width,
+                                                       output_height,
+                                                       &n_supported_scales);
+
+  for (i = 0; i < n_supported_scales; ++i)
+    add_scale (self, scales[i], output_width, output_height);
+
+  current_scale = gnome_rr_output_info_get_scale (self->priv->current_output);
+
+  g_debug ("Current scale for selected output: %f", current_scale);
+
+  current = g_strdup_printf (_("%d%%"), (int) (current_scale * 100));
+
+  if (!combo_select (self->priv->scale_combo, current))
+    {
+      char *str;
+
+      add_scale (self, current_scale, output_width, output_height);
+      str = g_strdup_printf (_("%d%%"), (int) (current_scale * 100));
+
+      combo_select (self->priv->scale_combo, str);
+      g_free (str);
+    }
+
+  g_signal_handlers_unblock_by_func (self->priv->scale_combo, on_scale_changed, self);
+
+  g_free (current);
+}
+
+static gint
+get_monitor_index_for_output (XID output_id)
+{
+    GdkDisplay *display = gdk_display_get_default ();
+    GdkScreen *screen = gdk_display_get_default_screen (display);
+    gint i;
+
+    i = 0;
+
+    for (i = 0; i < gdk_display_get_n_monitors (display); i++) {
+        if (gdk_x11_screen_get_monitor_output (screen, i) == output_id) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static gchar *
+get_base_scale_string (guint value)
+{
+    switch (value)
+    {
+        case 1:
+            return g_strdup (_("Normal"));
+        case 2:
+            return g_strdup (_("Double (Hi-DPI)"));
+        default:
+            return g_strdup_printf ("%dx", value);
+    }
+}
+
+typedef struct
+{
+  guint value;
+  gboolean found;
+  GtkTreeIter iter;
+} BaseScaleForeachInfo;
+
+static gint
+get_max_base_scale_for_output (GnomeRRScreen     *screen,
+                               GnomeRROutputInfo *info)
+{
+    gint monitor_index;
+    GnomeRROutput *output;
+
+    output = gnome_rr_screen_get_output_by_name (screen, gnome_rr_output_info_get_name (info));
+    monitor_index = get_monitor_index_for_output (gnome_rr_output_get_id (output));
+
+    return gnome_rr_screen_calculate_best_global_scale (screen, monitor_index);
+}
+
+static gboolean
+base_scale_foreach (GtkTreeModel *model,
+         GtkTreePath *path,
+         GtkTreeIter *iter,
+         gpointer data)
+{
+  BaseScaleForeachInfo *info = data;
+  guint model_val = 0;
+
+  gtk_tree_model_get (model, iter, BASE_SCALE_VALUE_COL, &model_val, -1);
+
+  if (info->value == model_val)
+    {
+      info->found = TRUE;
+      info->iter = *iter;
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static GtkTreeIter
+add_base_scale_value (GtkTreeModel *model,
+                      guint         value)
+{
+  BaseScaleForeachInfo info;
+
+  info.value = value;
+  info.found = FALSE;
+
+  gtk_tree_model_foreach (model, base_scale_foreach, &info);
+
+  if (!info.found)
+    {
+      GtkTreeIter iter;
+      gchar *text;
+      g_debug ("adding base scale of %d to base scale combo", value);
+
+      text = get_base_scale_string (value);
+
+      gtk_list_store_insert_with_values (GTK_LIST_STORE (model), &iter, -1,
+                                         BASE_SCALE_TEXT_COL, text,
+                                         BASE_SCALE_VALUE_COL, value,
+                                         -1);
+
+      g_free (text);
+
+      return iter;
+    }
+
+  return info.iter;
+}
+
+static void
+rebuild_base_scale_combo (CcDisplayPanel *self)
+{
+  GtkListStore *model;
+  GnomeRROutputInfo **outputs;
+  int i, n_active, current_base_scale, max_base_scale;
+  GtkTreeIter selected_iter;
+  GtkTreeIter iter;
+
+  model = gtk_combo_box_get_model (GTK_COMBO_BOX (self->priv->base_scale_combo));
+
+  g_signal_handlers_block_by_func (self->priv->base_scale_combo, on_base_scale_changed, self);
+
+  clear_combo (self->priv->base_scale_combo);
+
+  outputs = gnome_rr_config_get_outputs (self->priv->current_configuration);
+  current_base_scale = gnome_rr_config_get_base_scale (self->priv->current_configuration);
+
+  n_active = 0;
+  max_base_scale = 0;
+
+  /* Find the optimal scale for each monitor, looking for the highest. */
+  for (i = 0; outputs[i] != NULL; i++)
+  {
+    GnomeRROutputInfo *info = outputs[i];
+    gint base_scale;
+
+    if (!gnome_rr_output_info_is_active (info))
+    {
+        continue;
+    }
+
+    base_scale = get_max_base_scale_for_output (self->priv->screen, info);
+    max_base_scale = MAX (max_base_scale, base_scale);
+    n_active++;
+  }
+
+  if (n_active == 0)
+  {
+    gtk_widget_set_sensitive (self->priv->base_scale_combo, FALSE);
+
+    g_signal_handlers_unblock_by_func (self->priv->base_scale_combo, on_base_scale_changed, self);
+    return;
+  }
+
+  /* Now add 1 thru max_base_scale, and one past. */
+  for (i = 1; i <= max_base_scale + 1; i++)
+  {
+    iter = add_base_scale_value (GTK_TREE_MODEL (model), i);
+
+    if (i == current_base_scale)
+    {
+        selected_iter = iter;
+    }
+  }
+
+  gtk_widget_set_sensitive (self->priv->base_scale_combo, TRUE);
+  gtk_combo_box_set_active_iter (self->priv->base_scale_combo, &selected_iter);
+
+  g_signal_handlers_unblock_by_func (self->priv->base_scale_combo, on_base_scale_changed, self);
 }
 
 static void
@@ -837,11 +1419,15 @@ rebuild_gui (CcDisplayPanel *self)
 
   self->priv->ignore_gui_changes = TRUE;
 
+  foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
   rebuild_mirror_screens (self);
   rebuild_current_monitor_label (self);
   rebuild_on_off_radios (self);
   rebuild_resolution_combo (self);
+  rebuild_refresh_combo (self);
   rebuild_rotation_combo (self);
+  rebuild_scale_combo (self);
+  rebuild_base_scale_combo (self);
 
   gtk_widget_set_sensitive (self->priv->primary_button,
                             !gnome_rr_output_info_get_primary (self->priv->current_output));
@@ -850,12 +1436,22 @@ rebuild_gui (CcDisplayPanel *self)
 }
 
 static gboolean
-get_mode (GtkWidget *widget, int *width, int *height, int *rate, GnomeRRRotation *rot)
+get_mode (GtkWidget       *widget,
+          int             *width,
+          int             *height,
+          double          *rate,
+          float           *scale,
+          GnomeRRRotation *rot,
+          gboolean        *doublescan, 
+          gboolean        *interlaced,
+          gboolean        *vsync)
 {
   GtkTreeIter iter;
   GtkTreeModel *model;
   GtkComboBox *box = GTK_COMBO_BOX (widget);
   int dummy;
+  double dummy_d;
+  float dummy_f;
 
   if (!gtk_combo_box_get_active_iter (box, &iter))
     return FALSE;
@@ -867,10 +1463,22 @@ get_mode (GtkWidget *widget, int *width, int *height, int *rate, GnomeRRRotation
     height = &dummy;
 
   if (!rate)
-    rate = &dummy;
+    rate = &dummy_d;
+
+  if (!scale)
+    scale = &dummy_f;
 
   if (!rot)
     rot = (GnomeRRRotation *)&dummy;
+
+  if (!doublescan)
+    doublescan = &dummy;
+
+  if (!interlaced)
+    interlaced = &dummy;
+
+  if (!vsync)
+    vsync = &dummy;
 
   model = gtk_combo_box_get_model (box);
   gtk_tree_model_get (model, &iter,
@@ -878,6 +1486,10 @@ get_mode (GtkWidget *widget, int *width, int *height, int *rate, GnomeRRRotation
                       HEIGHT_COL, height,
                       RATE_COL, rate,
                       ROTATION_COL, rot,
+                      SCALE_COL, scale,
+                      DSCAN_COL, doublescan,
+                      ILACED_COL, interlaced,
+                      VSYNC_COL, vsync,
                       -1);
 
   return TRUE;
@@ -893,7 +1505,7 @@ on_rotation_changed (GtkComboBox *box, gpointer data)
   if (!self->priv->current_output)
     return;
 
-  if (get_mode (self->priv->rotation_combo, NULL, NULL, NULL, &rotation))
+  if (get_mode (self->priv->rotation_combo, NULL, NULL, NULL, NULL, &rotation, NULL, NULL, NULL))
     gnome_rr_output_info_set_rotation (self->priv->current_output, rotation);
 
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
@@ -905,6 +1517,8 @@ select_resolution_for_current_output (CcDisplayPanel *self)
   GnomeRRMode **modes;
   int width, height;
   int x,y;
+  gboolean doublescan, interlaced, vsync;
+
   gnome_rr_output_info_get_geometry (self->priv->current_output, &x, &y, NULL, NULL);
 
   width = gnome_rr_output_info_get_preferred_width (self->priv->current_output);
@@ -920,9 +1534,10 @@ select_resolution_for_current_output (CcDisplayPanel *self)
   if (!modes)
     return;
 
-  find_best_mode (modes, &width, &height);
+  find_best_mode (modes, &width, &height, &doublescan, &interlaced, &vsync);
 
   gnome_rr_output_info_set_geometry (self->priv->current_output, x, y, width, height);
+  gnome_rr_output_info_set_flags (self->priv->current_output, doublescan, interlaced, vsync);
 }
 
 static void
@@ -953,6 +1568,82 @@ monitor_switch_active_cb (GObject    *object,
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 }
 
+static gint
+sort_by_x (gconstpointer a, gconstpointer b)
+{
+    GnomeRROutputInfo *info1 = GNOME_RR_OUTPUT_INFO (a);
+    GnomeRROutputInfo *info2 = GNOME_RR_OUTPUT_INFO (b);
+    gint x1, x2;
+
+    gnome_rr_output_info_get_geometry (info1, &x1, NULL, NULL, NULL);
+    gnome_rr_output_info_get_geometry (info2, &x2, NULL, NULL, NULL);
+
+    return x1 - x2;
+}
+
+static void
+realign_outputs_after_scale_change (CcDisplayPanel *self, GnomeRROutputInfo *output_that_changed)
+{
+  /* We take all outputs, figure out their existing left-to-right order, then reconnect their edges.
+   * This is different from a resolution change on a single monitor, because a scale change can potentially
+   * affect the visual of all monitors if the pending global scale changes, causing them to have gaps, or
+   * overlap suddenly.
+   */
+
+  int i, x, top_y;
+
+  GnomeRROutputInfo **outputs;
+  GList *ordered = NULL, *iter;
+  top_y = 0;
+
+  /* Find out the y position of the output that changed, we'll only try to realign those that share it.
+   * This is imperfect but should cover most use-cases
+   */
+  gnome_rr_output_info_get_geometry (output_that_changed, NULL, &top_y, NULL, NULL);
+
+  /* First pass, gather all "on" outputs with common y edges */
+  outputs = gnome_rr_config_get_outputs (self->priv->current_configuration);
+
+  for (i = 0; outputs[i]; ++i)
+    {
+      if (gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i]))
+        {
+          int output_y;
+          gnome_rr_output_info_get_geometry (output_that_changed, NULL, &output_y, NULL, NULL);
+
+          if (output_y == top_y)
+            {
+              ordered = g_list_prepend (ordered, outputs[i]);
+            }
+        }
+    }
+
+  ordered = g_list_sort (ordered, (GCompareFunc) sort_by_x);
+
+  x = 0;
+
+  for (iter = ordered; iter != NULL; iter = iter->next)
+    {
+      int width, height;
+      get_scaled_geometry (self, iter->data, NULL, NULL, &width, &height);
+      set_scaled_geometry (self, iter->data, x, 0, width, height);
+      x += width;
+    }
+
+  /* Second pass, all the black screens */
+
+  for (i = 0; outputs[i]; ++i)
+    {
+      int width, height;
+      if (!(gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i])))
+        {
+          get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
+          set_scaled_geometry (self, outputs[i], x, 0, width, height);
+          x += width;
+        }
+    }
+}
+
 static void
 realign_outputs_after_resolution_change (CcDisplayPanel *self, GnomeRROutputInfo *output_that_changed, int old_width, int old_height)
 {
@@ -970,7 +1661,7 @@ realign_outputs_after_resolution_change (CcDisplayPanel *self, GnomeRROutputInfo
 
   g_assert (self->priv->current_configuration != NULL);
 
-  gnome_rr_output_info_get_geometry (output_that_changed, &x, &y, &width, &height); 
+  get_scaled_geometry (self, output_that_changed, &x, &y, &width, &height); 
 
   if (width == old_width && height == old_height)
     return;
@@ -991,7 +1682,7 @@ realign_outputs_after_resolution_change (CcDisplayPanel *self, GnomeRROutputInfo
       if (outputs[i] == output_that_changed || !gnome_rr_output_info_is_connected (outputs[i]))
         continue;
 
-      gnome_rr_output_info_get_geometry (outputs[i], &output_x, &output_y, &output_width, &output_height);
+      get_scaled_geometry (self, outputs[i], &output_x, &output_y, &output_width, &output_height);
 
       if (output_x >= old_right_edge)
          output_x += dx;
@@ -1003,7 +1694,7 @@ realign_outputs_after_resolution_change (CcDisplayPanel *self, GnomeRROutputInfo
       else if (output_y + output_height == old_bottom_edge)
          output_y = y + height - output_height;
 
-      gnome_rr_output_info_set_geometry (outputs[i], output_x, output_y, output_width, output_height);
+      set_scaled_geometry (self, outputs[i], output_x, output_y, output_width, output_height);
     }
 }
 
@@ -1011,19 +1702,35 @@ static void
 on_resolution_changed (GtkComboBox *box, gpointer data)
 {
   CcDisplayPanel *self = data;
-  int old_width, old_height;
+  int old_width, old_height, old_scaled_width, old_scaled_height;
   int x,y;
   int width;
   int height;
+  gboolean doublescan, interlaced, vsync;
+  double rate;
 
   if (!self->priv->current_output)
     return;
 
   gnome_rr_output_info_get_geometry (self->priv->current_output, &x, &y, &old_width, &old_height);
+  get_scaled_geometry (self, self->priv->current_output, NULL, NULL, &old_scaled_width, &old_scaled_height);
 
-  if (get_mode (self->priv->resolution_combo, &width, &height, NULL, NULL))
+  if (get_mode (self->priv->resolution_combo, &width, &height, &rate, NULL, NULL, &doublescan, &interlaced, &vsync))
     {
       gnome_rr_output_info_set_geometry (self->priv->current_output, x, y, width, height);
+
+      /* At construction, resolution_changed gets called by combo_select() during
+       * rebuild_resolution_combo(). We don't want to lose what our starting refresh rate was
+       * (because the res combo only has the highest refresh rate modes for a given resolution).
+       * Once we've been thru rebuild_gui() once, and future res combo box changes can reset the
+       * current_output (our working info for a monitor) to whatever the highest refresh rate is
+       * for that resolution, which is also the preferred rate.
+       */
+      if (!self->priv->ignore_gui_changes)
+        {
+          gnome_rr_output_info_set_refresh_rate_f (self->priv->current_output, rate);
+          gnome_rr_output_info_set_flags (self->priv->current_output, doublescan, interlaced, vsync);
+        }
 
       if (width == 0 || height == 0)
         gnome_rr_output_info_set_active (self->priv->current_output, FALSE);
@@ -1031,10 +1738,83 @@ on_resolution_changed (GtkComboBox *box, gpointer data)
         gnome_rr_output_info_set_active (self->priv->current_output, TRUE);
     }
 
-  realign_outputs_after_resolution_change (self, self->priv->current_output, old_width, old_height);
+  realign_outputs_after_resolution_change (self, self->priv->current_output, old_scaled_width, old_scaled_height);
 
+  rebuild_refresh_combo (self);
   rebuild_rotation_combo (self);
+  rebuild_scale_combo (self);
+  rebuild_base_scale_combo (self);
 
+  foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
+}
+
+static void
+on_refresh_changed (GtkComboBox *box, gpointer data)
+{
+  CcDisplayPanel *self = data;
+  double rate;
+  gboolean doublescan, interlaced, vsync;
+
+  if (!self->priv->current_output)
+    return;
+
+  if (get_mode (self->priv->refresh_combo, NULL, NULL, &rate, NULL, NULL, &doublescan, &interlaced, &vsync))
+    {
+      gnome_rr_output_info_set_refresh_rate_f (self->priv->current_output, rate);
+      gnome_rr_output_info_set_flags (self->priv->current_output, doublescan, interlaced, vsync);
+    }
+}
+
+static void
+on_scale_changed (GtkComboBox *box, gpointer data)
+{
+  CcDisplayPanel *self = data;
+  float scale;
+  gint width, height;
+
+  if (!self->priv->current_output)
+    return;
+
+  if (get_mode (self->priv->scale_combo, NULL, NULL, NULL, &scale, NULL, NULL, NULL, NULL))
+    {
+      gnome_rr_output_info_set_scale (self->priv->current_output, scale);
+      update_base_scale (self);
+    }
+
+  get_scaled_geometry (self, self->priv->current_output, NULL, NULL, &width, &height);
+
+  realign_outputs_after_scale_change (self, self->priv->current_output);
+  foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
+}
+
+static void
+on_base_scale_changed (GtkComboBox *box, gpointer data)
+{
+  CcDisplayPanel *self = data;
+  GtkTreeIter iter;
+  GtkTreeModel *model;
+  guint current_value, new_value;
+
+  if (!gtk_combo_box_get_active_iter (box, &iter))
+  {
+    g_debug ("No valid base scale selected, not doing anything");
+    return;
+  }
+
+  current_value = gnome_rr_config_get_base_scale (self->priv->current_configuration);
+
+  model = gtk_combo_box_get_model (box);
+  gtk_tree_model_get (model, &iter,
+                      BASE_SCALE_VALUE_COL, &new_value,
+                      -1);
+
+  if (new_value != current_value)
+  {
+    g_debug ("Setting current configuration's base scale to %d\n", new_value);
+    gnome_rr_config_set_base_scale (self->priv->current_configuration, new_value);
+  }
+
+  realign_outputs_after_scale_change (self, self->priv->current_output);
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 }
 
@@ -1060,8 +1840,8 @@ lay_out_outputs_horizontally (CcDisplayPanel *self)
       int width, height;
       if (gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i]))
         {
-          gnome_rr_output_info_get_geometry (outputs[i], NULL, NULL, &width, &height);
-          gnome_rr_output_info_set_geometry (outputs[i], x, 0, width, height);
+          get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
+          set_scaled_geometry (self, outputs[i], x, 0, width, height);
           x += width;
         }
     }
@@ -1073,8 +1853,8 @@ lay_out_outputs_horizontally (CcDisplayPanel *self)
       int width, height;
       if (!(gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i])))
         {
-          gnome_rr_output_info_get_geometry (outputs[i], NULL, NULL, &width, &height);
-          gnome_rr_output_info_set_geometry (outputs[i], x, 0, width, height);
+          get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
+          set_scaled_geometry (self, outputs[i], x, 0, width, height);
           x += width;
         }
     }
@@ -1145,11 +1925,11 @@ output_info_supports_mode (CcDisplayPanel *self, GnomeRROutputInfo *info, int wi
 }
 
 static void
-on_clone_changed (GtkWidget *box, gpointer data)
+on_clone_changed (GtkWidget *box, gboolean state, gpointer data)
 {
   CcDisplayPanel *self = data;
 
-  gnome_rr_config_set_clone (self->priv->current_configuration, gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (self->priv->clone_checkbox)));
+  gnome_rr_config_set_clone (self->priv->current_configuration, gtk_switch_get_active (GTK_SWITCH (self->priv->clone_switch)));
 
   if (gnome_rr_config_get_clone (self->priv->current_configuration))
     {
@@ -1184,7 +1964,7 @@ on_clone_changed (GtkWidget *box, gpointer data)
     }
   else
     {
-      if (output_overlaps (self->priv->current_output, self->priv->current_configuration))
+      if (output_overlaps (self, self->priv->current_output, self->priv->current_configuration))
         lay_out_outputs_horizontally (self);
     }
 
@@ -1207,16 +1987,20 @@ apply_rotation_to_geometry (GnomeRROutputInfo *output, int *w, int *h)
 }
 
 static void
-get_geometry (GnomeRROutputInfo *output, int *w, int *h)
+get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *w, int *h)
 {
   if (gnome_rr_output_info_is_active (output))
     {
-      gnome_rr_output_info_get_geometry (output, NULL, NULL, w, h);
+      get_scaled_geometry (self, output, NULL, NULL, w, h);
     }
   else
     {
-      *h = gnome_rr_output_info_get_preferred_height (output);
-      *w = gnome_rr_output_info_get_preferred_width (output);
+      float scale;
+
+      scale = 1 / (gnome_rr_output_info_get_scale (output) / gnome_rr_config_get_base_scale (self->priv->current_configuration));
+
+      *h = floor (gnome_rr_output_info_get_preferred_height (output) * scale);
+      *w = floor (gnome_rr_output_info_get_preferred_width (output) * scale);
     }
 
   apply_rotation_to_geometry (output, w, h);
@@ -1249,7 +2033,7 @@ list_connected_outputs (CcDisplayPanel *self, int *total_w, int *total_h)
 
 	  result = g_list_prepend (result, outputs[i]);
 
-	  get_geometry (outputs[i], &w, &h);
+	  get_geometry (self, outputs[i], &w, &h);
 
           *total_w += w;
           *total_h += h;
@@ -1322,11 +2106,11 @@ add_edge (GnomeRROutputInfo *output, int x1, int y1, int x2, int y2, GArray *edg
 }
 
 static void
-list_edges_for_output (GnomeRROutputInfo *output, GArray *edges)
+list_edges_for_output (CcDisplayPanel *self, GnomeRROutputInfo *output, GArray *edges)
 {
   int x, y, w, h;
 
-  gnome_rr_output_info_get_geometry (output, &x, &y, &w, &h);
+  get_scaled_geometry (self, output, &x, &y, &w, &h);
 
   apply_rotation_to_geometry (output, &w, &h);
 
@@ -1338,7 +2122,7 @@ list_edges_for_output (GnomeRROutputInfo *output, GArray *edges)
 }
 
 static void
-list_edges (GnomeRRConfig *config, GArray *edges)
+list_edges (CcDisplayPanel *self, GnomeRRConfig *config, GArray *edges)
 {
   int i;
   GnomeRROutputInfo **outputs = gnome_rr_config_get_outputs (config);
@@ -1346,7 +2130,7 @@ list_edges (GnomeRRConfig *config, GArray *edges)
   for (i = 0; outputs[i]; ++i)
     {
       if (gnome_rr_output_info_is_connected (outputs[i]))
-	list_edges_for_output (outputs[i], edges);
+	list_edges_for_output (self, outputs[i], edges);
     }
 }
 
@@ -1487,7 +2271,7 @@ edges_align (Edge *e1, Edge *e2)
 }
 
 static gboolean
-output_is_aligned (GnomeRROutputInfo *output, GArray *edges)
+output_is_aligned (CcDisplayPanel *self, GnomeRROutputInfo *output, GArray *edges)
 {
   gboolean result = FALSE;
   int i;
@@ -1524,7 +2308,7 @@ output_is_aligned (GnomeRROutputInfo *output, GArray *edges)
 }
 
 static void
-get_output_rect (GnomeRROutputInfo *output, GdkRectangle *rect)
+get_output_rect (CcDisplayPanel *self, GnomeRROutputInfo *output, GdkRectangle *rect)
 {
   gnome_rr_output_info_get_geometry (output, &rect->x, &rect->y, &rect->width, &rect->height);
 
@@ -1532,7 +2316,7 @@ get_output_rect (GnomeRROutputInfo *output, GdkRectangle *rect)
 }
 
 static gboolean
-output_overlaps (GnomeRROutputInfo *output, GnomeRRConfig *config)
+output_overlaps (CcDisplayPanel *self, GnomeRROutputInfo *output, GnomeRRConfig *config)
 {
   int i;
   GdkRectangle output_rect;
@@ -1540,7 +2324,7 @@ output_overlaps (GnomeRROutputInfo *output, GnomeRRConfig *config)
 
   g_assert (output != NULL);
 
-  get_output_rect (output, &output_rect);
+  get_output_rect (self, output, &output_rect);
 
   outputs = gnome_rr_config_get_outputs (config);
   for (i = 0; outputs[i]; ++i)
@@ -1549,7 +2333,7 @@ output_overlaps (GnomeRROutputInfo *output, GnomeRRConfig *config)
 	{
 	  GdkRectangle other_rect;
 
-	  get_output_rect (outputs[i], &other_rect);
+	  get_output_rect (self, outputs[i], &other_rect);
 	  if (gdk_rectangle_intersect (&output_rect, &other_rect, NULL))
 	    return TRUE;
 	}
@@ -1559,7 +2343,7 @@ output_overlaps (GnomeRROutputInfo *output, GnomeRRConfig *config)
 }
 
 static gboolean
-gnome_rr_config_is_aligned (GnomeRRConfig *config, GArray *edges)
+gnome_rr_config_is_aligned (CcDisplayPanel *self, GnomeRRConfig *config, GArray *edges)
 {
   int i;
   gboolean result = TRUE;
@@ -1570,10 +2354,10 @@ gnome_rr_config_is_aligned (GnomeRRConfig *config, GArray *edges)
     {
       if (gnome_rr_output_info_is_connected (outputs[i]))
 	{
-	  if (!output_is_aligned (outputs[i], edges))
+	  if (!output_is_aligned (self, outputs[i], edges))
 	    return FALSE;
 
-	  if (output_overlaps (outputs[i], config))
+	  if (output_overlaps (self, outputs[i], config))
 	    return FALSE;
 	}
     }
@@ -1727,7 +2511,7 @@ on_output_event (FooScrollArea *area,
       if (!gnome_rr_config_get_clone (self->priv->current_configuration) && get_n_connected (self) > 1)
 	{
 	  int output_x, output_y;
-	  gnome_rr_output_info_get_geometry (output, &output_x, &output_y, NULL, NULL);
+	  get_scaled_geometry (self, output, &output_x, &output_y, NULL, NULL);
 
 	  foo_scroll_area_begin_grab (area, on_output_event, data);
 
@@ -1746,48 +2530,48 @@ on_output_event (FooScrollArea *area,
       if (foo_scroll_area_is_grabbed (area))
 	{
 	  GrabInfo *info = g_object_get_data (G_OBJECT (output), "grab-info");
-	  double scale = compute_scale (self);
+	  float scale = compute_scale (self);
 	  int old_x, old_y;
 	  int width, height;
 	  int new_x, new_y;
 	  int i;
 	  GArray *edges, *snaps, *new_edges;
 
-	  gnome_rr_output_info_get_geometry (output, &old_x, &old_y, &width, &height);
+	  get_scaled_geometry (self, output, &old_x, &old_y, &width, &height);
 	  new_x = info->output_x + (event->x - info->grab_x) / scale;
 	  new_y = info->output_y + (event->y - info->grab_y) / scale;
 
-	  gnome_rr_output_info_set_geometry (output, new_x, new_y, width, height);
+	  set_scaled_geometry (self, output, new_x, new_y, width, height);
 
 	  edges = g_array_new (TRUE, TRUE, sizeof (Edge));
 	  snaps = g_array_new (TRUE, TRUE, sizeof (Snap));
 	  new_edges = g_array_new (TRUE, TRUE, sizeof (Edge));
 
-	  list_edges (self->priv->current_configuration, edges);
+	  list_edges (self, self->priv->current_configuration, edges);
 	  list_snaps (output, edges, snaps);
 
 	  g_array_sort (snaps, compare_snaps);
 
-	  gnome_rr_output_info_set_geometry (output, new_x, new_y, width, height);
+	  set_scaled_geometry (self, output, new_x, new_y, width, height);
 
 	  for (i = 0; i < snaps->len; ++i)
 	    {
 	      Snap *snap = &(g_array_index (snaps, Snap, i));
 	      GArray *new_edges = g_array_new (TRUE, TRUE, sizeof (Edge));
 
-	      gnome_rr_output_info_set_geometry (output, new_x + snap->dx, new_y + snap->dy, width, height);
+	      set_scaled_geometry (self, output, new_x + snap->dx, new_y + snap->dy, width, height);
 
 	      g_array_set_size (new_edges, 0);
-	      list_edges (self->priv->current_configuration, new_edges);
+	      list_edges (self, self->priv->current_configuration, new_edges);
 
-	      if (gnome_rr_config_is_aligned (self->priv->current_configuration, new_edges))
+	      if (gnome_rr_config_is_aligned (self, self->priv->current_configuration, new_edges))
 		{
 		  g_array_free (new_edges, TRUE);
 		  break;
 		}
 	      else
 		{
-		  gnome_rr_output_info_set_geometry (output, info->output_x, info->output_y, width, height);
+		  set_scaled_geometry (self, output, info->output_x, info->output_y, width, height);
 		}
 	    }
 
@@ -1937,26 +2721,30 @@ paint_output (CcDisplayPanel *self, cairo_t *cr, int i)
   cairo_save (cr);
 
   foo_scroll_area_get_viewport (FOO_SCROLL_AREA (self->priv->area), &viewport);
-  get_geometry (output, &w, &h);
+  get_geometry (self, output, &w, &h);
 
 #if 0
-  g_debug ("%s (%p) geometry %d %d %d primary=%d", output->name, output->name,
-           w, h, output->rate, output->primary);
+  g_printerr ("%s (%p) geometry %d %d %.2f primary=%d\n",
+           gnome_rr_output_info_get_name (output),
+           output,
+           w, h,
+           gnome_rr_output_info_get_refresh_rate_f (output),
+           gnome_rr_output_info_get_primary (output));
 #endif
 
   viewport.height -= 2 * MARGIN;
   viewport.width -= 2 * MARGIN;
 
-  gnome_rr_output_info_get_geometry (output, &output_x, &output_y, NULL, NULL);
+  get_scaled_geometry (self, output, &output_x, &output_y, NULL, NULL);
   x = output_x * scale + MARGIN + (viewport.width - total_w * scale) / 2.0;
   y = output_y * scale + MARGIN + (viewport.height - total_h * scale) / 2.0;
 
 #if 0
-  g_debug ("scaled: %f %f", x, y);
+  g_printerr ("scaled: %f %f\n", x, y);
 
-  g_debug ("scale: %f", scale);
+  g_printerr ("scale: %f\n", scale);
 
-  g_debug ("%f %f %f %f", x, y, w * scale + 0.5, h * scale + 0.5);
+  g_printerr ("%f %f %f %f\n", x, y, w * scale + 0.5, h * scale + 0.5);
 #endif
 
   cairo_translate (cr,
@@ -2079,7 +2867,189 @@ on_area_paint (FooScrollArea  *area,
 }
 
 static void
-make_text_combo (GtkWidget *widget, int sort_column)
+quaternary_text_data_func (GtkCellLayout *cell_layout,
+                         GtkCellRenderer *cell,
+                         GtkTreeModel    *model,
+                         GtkTreeIter     *iter,
+                         gpointer         data)
+{
+    GtkWidget *combo = GTK_WIDGET (data);
+    const gchar *wname = gtk_buildable_get_name (GTK_BUILDABLE (combo));
+
+    if (g_strcmp0 (wname, "refresh_combo") == 0)
+    {
+        gboolean doublescan;
+        gtk_tree_model_get (model,
+                            iter,
+                            DSCAN_COL, &doublescan,
+                            -1);
+
+        if (doublescan)
+        {
+            gchar *text = g_strdup (_("DoubleScan"));
+
+            g_object_set (G_OBJECT (cell),
+                          "text", text,
+                          "visible", TRUE,
+                          NULL);
+            g_free (text);
+        }
+        else
+        {
+            g_object_set (G_OBJECT (cell),
+                          "text", NULL,
+                          "visible", FALSE,
+                          NULL);
+        }
+    }
+}
+
+static void
+tertiary_text_data_func (GtkCellLayout   *cell_layout,
+                          GtkCellRenderer *cell,
+                          GtkTreeModel    *model,
+                          GtkTreeIter     *iter,
+                          gpointer         data)
+{
+    GtkWidget *combo = GTK_WIDGET (data);
+    const gchar *wname = gtk_buildable_get_name (GTK_BUILDABLE (combo));
+
+    if (g_strcmp0 (wname, "refresh_combo") == 0)
+    {
+        gboolean vsync;
+        gtk_tree_model_get (model,
+                            iter,
+                            VSYNC_COL, &vsync,
+                            -1);
+
+        if (vsync)
+        {
+            gchar *text = g_strdup (_("VSync"));
+
+            g_object_set (G_OBJECT (cell),
+                          "text", text,
+                          "visible", TRUE,
+                          NULL);
+            g_free (text);
+        }
+        else
+        {
+            g_object_set (G_OBJECT (cell),
+                          "text", NULL,
+                          "visible", FALSE,
+                          NULL);
+        }
+    }
+}
+
+static void
+secondary_text_data_func (GtkCellLayout   *cell_layout,
+                          GtkCellRenderer *cell,
+                          GtkTreeModel    *model,
+                          GtkTreeIter     *iter,
+                          gpointer         data)
+{
+    GtkWidget *combo = GTK_WIDGET (data);
+    const gchar *wname = gtk_buildable_get_name (GTK_BUILDABLE (combo));
+
+    if (g_strcmp0 (wname, "refresh_combo") == 0)
+    {
+        gboolean preferred;
+        gtk_tree_model_get (model,
+                            iter,
+                            PREF_COL, &preferred,
+                            -1);
+
+        if (preferred)
+        {
+            gchar *text = g_strdup (_("Recommended"));
+
+            g_object_set (G_OBJECT (cell),
+                          "text", text,
+                          "visible", TRUE,
+                          NULL);
+            g_free (text);
+        }
+        else
+        {
+            g_object_set (G_OBJECT (cell),
+                          "text", NULL,
+                          "visible", FALSE,
+                          NULL);
+        }
+    }
+    else
+    if (g_strcmp0 (wname, "resolution_combo") == 0)
+    {
+        gboolean preferred;
+
+        gtk_tree_model_get (model,
+                            iter,
+                            PREF_COL, &preferred,
+                            -1);
+
+        if (preferred)
+        {
+            gchar *text = g_strdup (_("Recommended"));
+
+            g_object_set (G_OBJECT (cell),
+                          "text", text,
+                          "visible", TRUE,
+                          NULL);
+            g_free (text);
+        }
+        else
+        {
+            g_object_set (G_OBJECT (cell),
+                          "text", NULL,
+                          "visible", FALSE,
+                          NULL);
+        }
+    }
+    else
+    if (g_strcmp0 (wname, "scale_combo") == 0)
+    {
+        gint width, height;
+        float scale;
+
+        gtk_tree_model_get (model,
+                            iter,
+                            WIDTH_COL, &width,
+                            HEIGHT_COL, &height,
+                            SCALE_COL, &scale,
+                            -1);
+
+        if (scale != 1.0f)
+        {
+            gint looks_like_w, looks_like_h;
+
+            looks_like_w = ceilf (width * (1.0 / scale));
+            looks_like_h = ceilf (height * (1.0 / scale));
+            gchar *text = g_strdup_printf (_("<b>scaled resolution: %d x %d</b>"), looks_like_w, looks_like_h);
+
+            g_object_set (G_OBJECT (cell),
+                          "markup", text,
+                          "visible", TRUE,
+                          "xalign", 1.0,
+                          NULL);
+            g_free (text);
+        }
+        else
+        {
+            g_object_set (G_OBJECT (cell),
+                          "text", NULL,
+                          "visible", FALSE,
+                          "xalign", 1.0,
+                          NULL);
+        }
+    }
+}
+
+static void
+make_text_combo (GtkWidget *widget,
+                 int        sort_column,
+                 gboolean   reverse_sort,
+                 gboolean   expand_second_cell)
 {
   GtkComboBox *box = GTK_COMBO_BOX (widget);
   GtkListStore *store = gtk_list_store_new (
@@ -2087,32 +3057,97 @@ make_text_combo (GtkWidget *widget, int sort_column)
                                             G_TYPE_STRING,          /* Text */
                                             G_TYPE_INT,             /* Width */
                                             G_TYPE_INT,             /* Height */
-                                            G_TYPE_INT,             /* Frequency */
+                                            G_TYPE_DOUBLE,          /* Frequency */
                                             G_TYPE_INT,             /* Width * Height */
-                                            G_TYPE_INT);            /* Rotation */
+                                            G_TYPE_INT,             /* Rotation */
+                                            G_TYPE_FLOAT,           /* Scale */
+                                            G_TYPE_BOOLEAN,         /* DoubleScan */
+                                            G_TYPE_BOOLEAN,         /* Interlaced */
+                                            G_TYPE_BOOLEAN,         /* VSync+ */
+                                            G_TYPE_BOOLEAN);        /* Preferred */
 
   GtkCellRenderer *cell;
+  GtkCellArea *area;
 
+  g_object_get (G_OBJECT (widget),
+                "cell-area", &area,
+                NULL);
+
+  gtk_cell_area_box_set_spacing (GTK_CELL_AREA_BOX (area), 5);
   gtk_cell_layout_clear (GTK_CELL_LAYOUT (widget));
 
   gtk_combo_box_set_model (box, GTK_TREE_MODEL (store));
 
   cell = gtk_cell_renderer_text_new ();
-  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, TRUE);
+  gtk_cell_renderer_set_alignment (cell, 0, 0.5);
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, FALSE);
   gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (box), cell,
                                   "text", 0,
                                   NULL);
+
+  cell = gtk_cell_renderer_text_new ();
+  gtk_cell_renderer_set_alignment (cell, 0, 0.5);
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, expand_second_cell);
+  gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (box),
+                                      cell,
+                                      (GtkCellLayoutDataFunc) secondary_text_data_func,
+                                      widget,
+                                      NULL);
+
+  cell = gtk_cell_renderer_text_new ();
+  gtk_cell_renderer_set_alignment (cell, 0, 0.5);
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, FALSE);
+  gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (box),
+                                      cell,
+                                      (GtkCellLayoutDataFunc) tertiary_text_data_func,
+                                      widget,
+                                      NULL);
+
+  cell = gtk_cell_renderer_text_new ();
+  gtk_cell_renderer_set_alignment (cell, 0, 0.5);
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, FALSE);
+  gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (box),
+                                      cell,
+                                      (GtkCellLayoutDataFunc) quaternary_text_data_func,
+                                      widget,
+                                      NULL);
 
   if (sort_column != -1)
     {
       gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (store),
                                             sort_column,
-                                            GTK_SORT_DESCENDING);
+                                            reverse_sort ? GTK_SORT_ASCENDING : GTK_SORT_DESCENDING);
     }
 }
 
 static void
-compute_virtual_size_for_configuration (GnomeRRConfig *config, int *ret_width, int *ret_height)
+make_base_scale_combo (CcDisplayPanel *self)
+{
+  GtkCellRenderer *cell;
+
+  GtkComboBox *box = GTK_COMBO_BOX (self->priv->base_scale_combo);
+  gtk_cell_layout_clear (GTK_CELL_LAYOUT (box));
+
+  GtkListStore *store = gtk_list_store_new (BASE_SCALE_NUM_COLS,
+                                            G_TYPE_STRING,      /* Text */
+                                            G_TYPE_INT);        /* Preferred */
+
+  gtk_combo_box_set_model (box, GTK_TREE_MODEL (store));
+
+  cell = gtk_cell_renderer_text_new ();
+  gtk_cell_renderer_set_alignment (cell, 0, 0.5);
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (box), cell, FALSE);
+  gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (box), cell,
+                                  "text", BASE_SCALE_TEXT_COL,
+                                  NULL);
+
+  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (store),
+                                        BASE_SCALE_VALUE_COL,
+                                        GTK_SORT_ASCENDING);
+}
+
+static void
+compute_virtual_size_for_configuration (CcDisplayPanel *self, GnomeRRConfig *config, int *ret_width, int *ret_height)
 {
   int i;
   int width, height;
@@ -2126,7 +3161,7 @@ compute_virtual_size_for_configuration (GnomeRRConfig *config, int *ret_width, i
     {
       if (gnome_rr_output_info_is_active (outputs[i]))
 	{
-	  gnome_rr_output_info_get_geometry (outputs[i], &output_x, &output_y, &output_width, &output_height);
+	  get_scaled_geometry (self, outputs[i], &output_x, &output_y, &output_width, &output_height);
 	  width = MAX (width, output_x + output_width);
 	  height = MAX (height, output_y + output_height);
 	}
@@ -2143,7 +3178,7 @@ check_required_virtual_size (CcDisplayPanel *self)
   int min_width, max_width;
   int min_height, max_height;
 
-  compute_virtual_size_for_configuration (self->priv->current_configuration, &req_width, &req_height);
+  compute_virtual_size_for_configuration (self, self->priv->current_configuration, &req_width, &req_height);
 
   gnome_rr_screen_get_ranges (self->priv->screen, &min_width, &max_width, &min_height, &max_height);
 
@@ -2332,7 +3367,7 @@ on_detect_displays (GtkWidget *widget, gpointer data)
 }
 
 static GnomeRROutputInfo *
-get_nearest_output (GnomeRRConfig *configuration, int x, int y)
+get_nearest_output (CcDisplayPanel *self, GnomeRRConfig *configuration, int x, int y)
 {
   int i;
   int nearest_index;
@@ -2384,7 +3419,7 @@ get_nearest_output (GnomeRRConfig *configuration, int x, int y)
  * Logic stolen from gdk_screen_get_monitor_at_window().
  */
 static GnomeRROutputInfo *
-get_output_for_window (GnomeRRConfig *configuration, GdkWindow *window)
+get_output_for_window (CcDisplayPanel *self, GnomeRRConfig *configuration, GdkWindow *window)
 {
   GdkRectangle win_rect;
   int i;
@@ -2403,7 +3438,7 @@ get_output_for_window (GnomeRRConfig *configuration, GdkWindow *window)
     {
       GdkRectangle output_rect, intersection;
 
-      gnome_rr_output_info_get_geometry (outputs[i], &output_rect.x, &output_rect.y, &output_rect.width, &output_rect.height);
+      get_scaled_geometry (self, outputs[i], &output_rect.x, &output_rect.y, &output_rect.width, &output_rect.height);
 
       if (gnome_rr_output_info_is_connected (outputs[i]) && gdk_rectangle_intersect (&win_rect, &output_rect, &intersection))
 	{
@@ -2421,7 +3456,7 @@ get_output_for_window (GnomeRRConfig *configuration, GdkWindow *window)
   if (largest_index != -1)
     return outputs[largest_index];
   else
-    return get_nearest_output (configuration,
+    return get_nearest_output (self, configuration,
 			       win_rect.x + win_rect.width / 2,
 			       win_rect.y + win_rect.height / 2);
 }
@@ -2444,7 +3479,7 @@ static void
 on_toplevel_realized (GtkWidget     *widget,
                       CcDisplayPanel *self)
 {
-  self->priv->current_output = get_output_for_window (self->priv->current_configuration,
+  self->priv->current_output = get_output_for_window (self, self->priv->current_configuration,
                                                gtk_widget_get_window (widget));
   rebuild_gui (self);
 }
@@ -2460,7 +3495,7 @@ select_current_output_from_dialog_position (CcDisplayPanel *self)
   toplevel = gtk_widget_get_toplevel (self->priv->panel);
 
   if (gtk_widget_get_realized (toplevel)) {
-    self->priv->current_output = get_output_for_window (self->priv->current_configuration,
+    self->priv->current_output = get_output_for_window (self, self->priv->current_configuration,
                                                  gtk_widget_get_window (toplevel));
     rebuild_gui (self);
   } else {
@@ -2493,13 +3528,14 @@ cc_display_panel_constructor (GType                  gtype,
                               GObjectConstructParam *properties)
 {
   GtkBuilder *builder;
-  GtkWidget *align;
+  GtkWidget *display_box;
   GError *error;
   GObject *obj;
   CcDisplayPanel *self;
   CcShell *shell;
   GtkWidget *toplevel;
-  gchar *objects[] = {"display-panel", "available_launcher_placement_store", NULL};
+  GtkWidget *widget;
+  gchar *objects[] = {"display-panel", NULL};
 
   obj = G_OBJECT_CLASS (cc_display_panel_parent_class)->constructor (gtype, n_properties, properties);
   self = CC_DISPLAY_PANEL (obj);
@@ -2516,7 +3552,7 @@ cc_display_panel_constructor (GType                  gtype,
     }
 
   self->priv->screen = gnome_rr_screen_new (gdk_screen_get_default (), &error);
-  g_signal_connect (self->priv->screen, "changed", G_CALLBACK (on_screen_changed), self);
+  g_signal_connect_swapped (self->priv->screen, "changed", G_CALLBACK (on_screen_changed), self);
   if (!self->priv->screen)
     {
       error_message (NULL, _("Could not get screen information"), error->message);
@@ -2524,6 +3560,8 @@ cc_display_panel_constructor (GType                  gtype,
       g_object_unref (builder);
       return obj;
     }
+
+  g_signal_connect_swapped (self, "notify::scale-factor", G_CALLBACK (on_screen_changed), self);
 
   shell = cc_panel_get_shell (CC_PANEL (self));
 
@@ -2557,17 +3595,46 @@ cc_display_panel_constructor (GType                  gtype,
   g_signal_connect (self->priv->rotation_combo, "changed",
                     G_CALLBACK (on_rotation_changed), self);
 
-  self->priv->clone_checkbox = WID ("clone_checkbox");
-  g_signal_connect (self->priv->clone_checkbox, "toggled",
+  self->priv->refresh_combo = WID ("refresh_combo");
+  g_signal_connect (self->priv->refresh_combo, "changed",
+                    G_CALLBACK (on_refresh_changed), self);
+
+  self->priv->scale_combo = WID ("scale_combo");
+  g_signal_connect (self->priv->scale_combo, "changed",
+                    G_CALLBACK (on_scale_changed), self);
+
+  self->priv->clone_switch = WID ("clone_switch");
+  g_signal_connect (self->priv->clone_switch, "state-set",
                     G_CALLBACK (on_clone_changed), self);
+
+  self->priv->base_scale_combo = WID ("base_scale_combo");
+  g_signal_connect (self->priv->base_scale_combo, "changed",
+                    G_CALLBACK (on_base_scale_changed), self);
+
+  // self->priv->interface_settings = g_settings_new (INTERFACE_SETTINGS_SCHEMA);
+
+  // widget = WID ("upscale_switch");
+
+  // gtk_switch_set_active (GTK_SWITCH (widget),
+  //                        g_settings_get_boolean (self->priv->interface_settings,
+  //                        UPSCALE_SETTINGS_KEY));
+
+  // g_settings_bind (self->priv->interface_settings,
+  //                  UPSCALE_SETTINGS_KEY,
+  //                  G_OBJECT (widget), "active",
+  //                  G_SETTINGS_BIND_DEFAULT);
 
   self->priv->clone_label    = WID ("clone_resolution_warning_label");
 
   g_signal_connect (WID ("detect_displays_button"),
                     "clicked", G_CALLBACK (on_detect_displays), self);
 
-  make_text_combo (self->priv->resolution_combo, 4);
-  make_text_combo (self->priv->rotation_combo, -1);
+  make_text_combo (self->priv->resolution_combo, 4, FALSE, FALSE);
+  make_text_combo (self->priv->rotation_combo, -1, FALSE, FALSE);
+  make_text_combo (self->priv->refresh_combo, -1, FALSE, FALSE);
+  make_text_combo (self->priv->scale_combo, SCALE_COL, TRUE, TRUE);
+
+  make_base_scale_combo (self);
 
   /* Scroll Area */
   self->priv->area = (GtkWidget *)foo_scroll_area_new ();
@@ -2584,11 +3651,11 @@ cc_display_panel_constructor (GType                  gtype,
   g_signal_connect (self->priv->area, "viewport_changed",
                     G_CALLBACK (on_viewport_changed), self);
 
-  align = WID ("align");
+  display_box = WID ("display-box");
 
-  gtk_container_add (GTK_CONTAINER (align), self->priv->area);
+  gtk_box_pack_start (GTK_BOX (display_box), self->priv->area, TRUE, TRUE, 0);
 
-  on_screen_changed (self->priv->screen, self);
+  on_screen_changed (self);
 
   g_signal_connect_swapped (WID ("apply_button"),
                             "clicked", G_CALLBACK (apply), self);
