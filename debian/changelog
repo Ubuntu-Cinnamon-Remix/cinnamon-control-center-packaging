@@ -1,8 +1,11 @@
-cinnamon-control-center (4.4.0-3) UNRELEASED; urgency=medium
+cinnamon-control-center (4.6.0-1) experimental; urgency=medium
 
   * Drop dbus-glib dependency (Closes: #955828)
+  * update watch file
+  * New upstream version 4.6.0
+  * update patches
 
- -- Norbert Preining <norbert@preining.info>  Fri, 10 Apr 2020 13:56:34 +0900
+ -- Norbert Preining <norbert@preining.info>  Wed, 13 May 2020 22:16:55 +0900
 
 cinnamon-control-center (4.4.0-2) unstable; urgency=medium
 
