@@ -15,7 +15,7 @@ Build-Depends:
  gnome-pkg-tools (>= 0.10),
  gtk-doc-tools,
  intltool (>= 0.37.1),
- libcinnamon-desktop-dev (>= 4.4),
+ libcinnamon-desktop-dev (>= 4.6),
  libcinnamon-menu-3-dev,
  libcolord-dev,
  libdbus-1-dev (>= 0.32),
@@ -49,8 +49,8 @@ Depends:
  accountsservice,
  apg,
  cinnamon-control-center-data (= ${source:Version}),
- cinnamon-desktop-data (>= 4.4),
- cinnamon-settings-daemon (>= 4.4),
+ cinnamon-desktop-data (>= 4.6),
+ cinnamon-settings-daemon (>= 4.6),
  desktop-file-utils,
  gettext,
  libcinnamon-control-center1 (= ${binary:Version}),
@@ -58,8 +58,8 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 4.4), cinnamon-core (<< 4.4~)
-Recommends: cinnamon-l10n (>= 4.4), iso-codes, mesa-utils, mousetweaks,
+Breaks: cinnamon (<< 4.6~), cinnamon-core (<< 4.6~)
+Recommends: cinnamon-l10n (>= 4.6), iso-codes, mesa-utils, mousetweaks,
  cinnamon-control-center-goa
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
@@ -75,8 +75,8 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
 Breaks: 
- cinnamon (<< 4.4),
- cinnamon-core (<< 4.4~),
+ cinnamon (<< 4.6~),
+ cinnamon-core (<< 4.6~),
  cinnamon-control-center (<< ${source:Version})
 Replaces: cinnamon-control-center (<< ${source:Version})
 Description: configuration applets for the Cinnamon desktop - Gnome Online Account
