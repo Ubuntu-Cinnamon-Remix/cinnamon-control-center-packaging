@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 4.6.0)
+m4_define([cinnamon_control_center_version], 4.6.1)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -315,7 +315,7 @@ if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
         -Wall -Wclobbered -Wempty-body -Wignored-qualifiers \
         -Wmissing-field-initializers -Wmissing-parameter-type \
         -Wold-style-declaration -Woverride-init -Wtype-limits \
-        -Wuninitialized \
+        -Wuninitialized -Wno-deprecated-declarations\
         -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes \
         -Wnested-externs -Wpointer-arith \
         -Wcast-align -Wsign-compare \
