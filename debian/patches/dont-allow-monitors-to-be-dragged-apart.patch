@@ -1,0 +1,22 @@
+>From 0d82544ae65827afc9f88b8e2343aa229cb8f89f Mon Sep 17 00:00:00 2001
+From: Michael Webster <miketwebster@gmail.com>
+Date: Sun, 19 Jul 2020 15:46:51 -0400
+Subject: [PATCH] cc-display-panel.c: Don't allow monitors to be dragged apart.
+
+This is unusable, and serves no purpose but to confuse.
+---
+ panels/display/cc-display-panel.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+--- a/panels/display/cc-display-panel.c
++++ b/panels/display/cc-display-panel.c
+@@ -2162,8 +2162,7 @@ vertical_overlap (Edge *snapper, Edge *s
+ static void
+ add_snap (GArray *snaps, Snap snap)
+ {
+-  if (ABS (snap.dx) <= 200 || ABS (snap.dy) <= 200)
+-    g_array_append_val (snaps, snap);
++  g_array_append_val (snaps, snap);
+ }
+ 
+ static void

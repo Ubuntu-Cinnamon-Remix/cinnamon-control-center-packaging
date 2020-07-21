@@ -3,3 +3,4 @@ Avoid-listing-common-twice.patch
 Clean-BUILT_SOURCES.patch
 Also-clean-the-generated-policy-file.patch
 drop-dbus-glib
+dont-allow-monitors-to-be-dragged-apart.patch
