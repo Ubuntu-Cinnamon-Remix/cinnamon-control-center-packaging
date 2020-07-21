@@ -59,7 +59,7 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
 Breaks: cinnamon (<< 4.6~), cinnamon-core (<< 4.6~)
-Recommends: cinnamon-l10n (>= 4.6), iso-codes, mesa-utils, mousetweaks,
+Recommends: cinnamon-l10n (>= 4.6), iso-codes, mesa-utils,
  cinnamon-control-center-goa
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
