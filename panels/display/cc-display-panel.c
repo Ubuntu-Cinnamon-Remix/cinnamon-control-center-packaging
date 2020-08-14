@@ -136,7 +136,7 @@ static gboolean output_overlaps (CcDisplayPanel *self, GnomeRROutputInfo *output
 static void select_current_output_from_dialog_position (CcDisplayPanel *self);
 static void monitor_switch_active_cb (GObject *object, GParamSpec *pspec, gpointer data);
 static void primary_button_clicked_cb (GObject *object, gpointer data);
-static void get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *w, int *h);
+static void get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *x, int *y, int *w, int *h);
 static void apply_configuration_returned_cb (GObject *proxy, GAsyncResult *res, gpointer data);
 static gboolean get_clone_size (GnomeRRScreen *screen, int *width, int *height);
 static gboolean output_info_supports_mode (CcDisplayPanel *self, GnomeRROutputInfo *info, int width, int height);
@@ -146,6 +146,11 @@ static GObject *cc_display_panel_constructor (GType                  gtype,
 					      guint                  n_properties,
 					      GObjectConstructParam *properties);
 static void on_screen_changed (gpointer data);
+static void realign_outputs_after_scale_or_rotation_change (CcDisplayPanel *self,
+                                                            GnomeRROutputInfo *output_that_changed);
+static void begin_version2_apply_configuration (CcDisplayPanel *self,
+                                                GdkWindow *parent_window,
+                                                guint32 timestamp);
 
 static void
 cc_display_panel_get_property (GObject    *object,
@@ -249,12 +254,34 @@ error_message (CcDisplayPanel *self, const char *primary_text, const char *secon
                                    GTK_BUTTONS_CLOSE,
                                    "%s", primary_text);
 
-  if (secondary_text)
-    gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog), "%s", secondary_text);
+  if (secondary_text) {
+    GtkWidget *scrolled_window;
+    GtkWidget *box;
+    GtkWidget *label;
+
+    scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+    gtk_widget_set_size_request (scrolled_window, 600, 200);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+                                    GTK_POLICY_NEVER,
+                                    GTK_POLICY_AUTOMATIC);
+
+    label = gtk_label_new (secondary_text);
+    gtk_label_set_line_wrap (GTK_LABEL (label), TRUE);
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+    gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 0);
+
+    gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scrolled_window), box);
+
+    gtk_box_pack_start(GTK_BOX (gtk_message_dialog_get_message_area (GTK_MESSAGE_DIALOG (dialog))),
+                       scrolled_window, TRUE, TRUE, 10);
+    gtk_widget_show_all (scrolled_window);
+  }
 
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
 }
+
+
 
 static gboolean
 int_equals_float (gint _int, gfloat _float)
@@ -302,19 +329,13 @@ get_scaled_geometry (CcDisplayPanel *self,
 }
 
 static void
-set_scaled_geometry (CcDisplayPanel *self,
+set_output_position (CcDisplayPanel    *self,
                      GnomeRROutputInfo *info,
-                     int x,     int y,
-                     int width, int height)
+                     int x, int y)
 {
-    float scale;
-    g_return_if_fail (GNOME_IS_RR_OUTPUT_INFO (info));
+    int width, height;
 
-    scale = 1 / (gnome_rr_output_info_get_scale (info) / gnome_rr_config_get_base_scale (self->priv->current_configuration));
-
-    width = ceilf (width / scale);
-    height = ceilf (height / scale);
-
+    gnome_rr_output_info_get_geometry (info, NULL, NULL, &width, &height);
     gnome_rr_output_info_set_geometry (info, x, y, width, height);
 }
 
@@ -1442,6 +1463,10 @@ on_rotation_changed (GtkComboBox *box, gpointer data)
 
   update_apply_state (self);
 
+  // Changing rotation can cause overlap (until a drag is initiated), so just
+  // refresh it when this change.
+  realign_outputs_after_scale_or_rotation_change (self, self->priv->current_output);
+  gnome_rr_config_sanitize (self->priv->current_configuration);
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 }
 
@@ -1519,7 +1544,23 @@ sort_by_x (gconstpointer a, gconstpointer b)
 }
 
 static void
-realign_outputs_after_scale_change (CcDisplayPanel *self, GnomeRROutputInfo *output_that_changed)
+apply_rotation_to_geometry (GnomeRROutputInfo *output, int *w, int *h)
+{
+  GnomeRRRotation rotation;
+
+  rotation = gnome_rr_output_info_get_rotation (output);
+  if ((rotation & GNOME_RR_ROTATION_90) || (rotation & GNOME_RR_ROTATION_270))
+    {
+      int tmp;
+      tmp = *h;
+      *h = *w;
+      *w = tmp;
+    }
+}
+
+static void
+realign_outputs_after_scale_or_rotation_change (CcDisplayPanel *self,
+                                                GnomeRROutputInfo *output_that_changed)
 {
   /* We take all outputs, figure out their existing left-to-right order, then reconnect their edges.
    * This is different from a resolution change on a single monitor, because a scale change can potentially
@@ -1563,7 +1604,8 @@ realign_outputs_after_scale_change (CcDisplayPanel *self, GnomeRROutputInfo *out
     {
       int width, height;
       get_scaled_geometry (self, iter->data, NULL, NULL, &width, &height);
-      set_scaled_geometry (self, iter->data, x, 0, width, height);
+      set_output_position (self, iter->data, x, 0);
+      apply_rotation_to_geometry (iter->data, &width, &height);
       x += width;
     }
 
@@ -1575,7 +1617,7 @@ realign_outputs_after_scale_change (CcDisplayPanel *self, GnomeRROutputInfo *out
       if (!(gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i])))
         {
           get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
-          set_scaled_geometry (self, outputs[i], x, 0, width, height);
+          set_output_position (self, outputs[i], x, 0);
           x += width;
         }
     }
@@ -1631,7 +1673,7 @@ realign_outputs_after_resolution_change (CcDisplayPanel *self, GnomeRROutputInfo
       else if (output_y + output_height == old_bottom_edge)
          output_y = y + height - output_height;
 
-      set_scaled_geometry (self, outputs[i], output_x, output_y, output_width, output_height);
+      set_output_position (self, outputs[i], output_x, output_y);
     }
 }
 
@@ -1725,7 +1767,7 @@ on_scale_changed (GtkComboBox *box, gpointer data)
 
   get_scaled_geometry (self, self->priv->current_output, NULL, NULL, &width, &height);
 
-  realign_outputs_after_scale_change (self, self->priv->current_output);
+  realign_outputs_after_scale_or_rotation_change (self, self->priv->current_output);
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 }
 
@@ -1790,7 +1832,7 @@ on_base_scale_changed (GtkComboBox *box, gpointer data)
 
   gtk_widget_set_sensitive (self->priv->fractional_switch, !new_auto_scale);
 
-  realign_outputs_after_scale_change (self, self->priv->current_output);
+  realign_outputs_after_scale_or_rotation_change (self, self->priv->current_output);
   foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 
   update_apply_state (self);
@@ -1821,7 +1863,7 @@ lay_out_outputs_horizontally (CcDisplayPanel *self)
       if (gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i]))
         {
           get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
-          set_scaled_geometry (self, outputs[i], x, 0, width, height);
+          set_output_position (self, outputs[i], x, 0);
           x += width;
         }
     }
@@ -1834,7 +1876,7 @@ lay_out_outputs_horizontally (CcDisplayPanel *self)
       if (!(gnome_rr_output_info_is_connected (outputs[i]) && gnome_rr_output_info_is_active (outputs[i])))
         {
           get_scaled_geometry (self, outputs[i], NULL, NULL, &width, &height);
-          set_scaled_geometry (self, outputs[i], x, 0, width, height);
+          set_output_position (self, outputs[i], x, 0);
           x += width;
         }
     }
@@ -1964,40 +2006,29 @@ on_fractional_switch_toggled (gpointer user_data)
   gtk_widget_set_sensitive (self->priv->scale_combo, enabled);
 
   if (!enabled)
-    {g_printerr ("fractional switchtoggle %.2f\n", (float) gnome_rr_config_get_base_scale (self->priv->current_configuration));
+    {
       gnome_rr_output_info_set_scale (self->priv->current_output,
                                       (float) gnome_rr_config_get_base_scale (self->priv->current_configuration));
 
       rebuild_scale_combo (self);
     }
+
+  realign_outputs_after_scale_or_rotation_change (self, self->priv->current_output);
+  gnome_rr_config_sanitize (self->priv->current_configuration);
+  foo_scroll_area_invalidate (FOO_SCROLL_AREA (self->priv->area));
 }
 
 static void
-apply_rotation_to_geometry (GnomeRROutputInfo *output, int *w, int *h)
-{
-  GnomeRRRotation rotation;
-
-  rotation = gnome_rr_output_info_get_rotation (output);
-  if ((rotation & GNOME_RR_ROTATION_90) || (rotation & GNOME_RR_ROTATION_270))
-    {
-      int tmp;
-      tmp = *h;
-      *h = *w;
-      *w = tmp;
-    }
-}
-
-static void
-get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *w, int *h)
+get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *x, int *y, int *w, int *h)
 {
   if (gnome_rr_output_info_is_active (output))
     {
-      get_scaled_geometry (self, output, NULL, NULL, w, h);
+      get_scaled_geometry (self, output, x, y, w, h);
     }
   else
     {
       float scale;
-
+      gnome_rr_output_info_get_geometry (output, x, y, NULL, NULL);
       scale = 1 / (gnome_rr_output_info_get_scale (output) / gnome_rr_config_get_base_scale (self->priv->current_configuration));
 
       *h = floor (gnome_rr_output_info_get_preferred_height (output) * scale);
@@ -2011,7 +2042,7 @@ get_geometry (CcDisplayPanel *self, GnomeRROutputInfo *output, int *w, int *h)
 #define MARGIN  15
 
 static GList *
-list_connected_outputs (CcDisplayPanel *self, int *total_w, int *total_h)
+list_connected_outputs (CcDisplayPanel *self, int *total_w, int *total_h, int *used_w, int *used_h)
 {
   int i, dummy;
   GList *result = NULL;
@@ -2021,23 +2052,32 @@ list_connected_outputs (CcDisplayPanel *self, int *total_w, int *total_h)
     total_w = &dummy;
   if (!total_h)
     total_h = &dummy;
+  if (!used_w)
+    used_w = &dummy;
+  if (!used_h)
+    used_h = &dummy;
 
   *total_w = 0;
   *total_h = 0;
+  *used_w = 0;
+  *used_h = 0;
 
   outputs = gnome_rr_config_get_outputs (self->priv->current_configuration);
   for (i = 0; outputs[i] != NULL; ++i)
     {
       if (gnome_rr_output_info_is_connected (outputs[i]))
-	{
-	  int w, h;
+        {
+          int x, y, w, h;
 
-	  result = g_list_prepend (result, outputs[i]);
+          result = g_list_prepend (result, outputs[i]);
 
-	  get_geometry (self, outputs[i], &w, &h);
+          get_geometry (self, outputs[i], &x, &y, &w, &h);
 
           *total_w += w;
           *total_h += h;
+
+          *used_w = MAX (*used_w, x + w);
+          *used_h = MAX (*used_h, y + h);
         }
     }
 
@@ -2047,7 +2087,7 @@ list_connected_outputs (CcDisplayPanel *self, int *total_w, int *total_h)
 static int
 get_n_connected (CcDisplayPanel *self)
 {
-  GList *connected_outputs = list_connected_outputs (self, NULL, NULL);
+  GList *connected_outputs = list_connected_outputs (self, NULL, NULL, NULL, NULL);
   int n = g_list_length (connected_outputs);
 
   g_list_free (connected_outputs);
@@ -2066,7 +2106,7 @@ compute_scale (CcDisplayPanel *self)
 
   foo_scroll_area_get_viewport (FOO_SCROLL_AREA (self->priv->area), &viewport);
 
-  connected_outputs = list_connected_outputs (self, &total_w, &total_h);
+  connected_outputs = list_connected_outputs (self, &total_w, &total_h, NULL, NULL);
 
   n_monitors = g_list_length (connected_outputs);
 
@@ -2162,8 +2202,7 @@ vertical_overlap (Edge *snapper, Edge *snappee)
 static void
 add_snap (GArray *snaps, Snap snap)
 {
-  if (ABS (snap.dx) <= 200 || ABS (snap.dy) <= 200)
-    g_array_append_val (snaps, snap);
+  g_array_append_val (snaps, snap);
 }
 
 static void
@@ -2311,8 +2350,7 @@ output_is_aligned (CcDisplayPanel *self, GnomeRROutputInfo *output, GArray *edge
 static void
 get_output_rect (CcDisplayPanel *self, GnomeRROutputInfo *output, GdkRectangle *rect)
 {
-  gnome_rr_output_info_get_geometry (output, &rect->x, &rect->y, &rect->width, &rect->height);
-
+  get_scaled_geometry (self, output, &rect->x, &rect->y, &rect->width, &rect->height);
   apply_rotation_to_geometry (output, &rect->width, &rect->height);
 }
 
@@ -2542,7 +2580,7 @@ on_output_event (FooScrollArea *area,
 	  new_x = info->output_x + (event->x - info->grab_x) / scale;
 	  new_y = info->output_y + (event->y - info->grab_y) / scale;
 
-	  set_scaled_geometry (self, output, new_x, new_y, width, height);
+	  set_output_position (self, output, new_x, new_y);
 
 	  edges = g_array_new (TRUE, TRUE, sizeof (Edge));
 	  snaps = g_array_new (TRUE, TRUE, sizeof (Snap));
@@ -2553,14 +2591,14 @@ on_output_event (FooScrollArea *area,
 
 	  g_array_sort (snaps, compare_snaps);
 
-	  set_scaled_geometry (self, output, new_x, new_y, width, height);
+	  set_output_position (self, output, new_x, new_y);
 
 	  for (i = 0; i < snaps->len; ++i)
 	    {
 	      Snap *snap = &(g_array_index (snaps, Snap, i));
 	      GArray *new_edges = g_array_new (TRUE, TRUE, sizeof (Edge));
 
-	      set_scaled_geometry (self, output, new_x + snap->dx, new_y + snap->dy, width, height);
+	      set_output_position (self, output, new_x + snap->dx, new_y + snap->dy);
 
 	      g_array_set_size (new_edges, 0);
 	      list_edges (self, self->priv->current_configuration, new_edges);
@@ -2572,7 +2610,7 @@ on_output_event (FooScrollArea *area,
 		}
 	      else
 		{
-		  set_scaled_geometry (self, output, info->output_x, info->output_y, width, height);
+		  set_output_position (self, output, info->output_x, info->output_y);
 		}
 	    }
 
@@ -2587,6 +2625,9 @@ on_output_event (FooScrollArea *area,
 
 	      g_free (g_object_get_data (G_OBJECT (output), "grab-info"));
 	      g_object_set_data (G_OBJECT (output), "grab-info", NULL);
+
+          // Re-center and scale everything after a drag
+          gnome_rr_config_sanitize (self->priv->current_configuration);
 
 #if 0
               g_debug ("new position: %d %d %d %d", output->x, output->y, output->width, output->height);
@@ -2708,8 +2749,8 @@ paint_output (CcDisplayPanel *self, cairo_t *cr, int i)
   double x, y;
   int output_x, output_y;
   GnomeRRRotation rotation;
-  int total_w, total_h;
-  GList *connected_outputs = list_connected_outputs (self, &total_w, &total_h);
+  int total_w, total_h, used_w, used_h;
+  GList *connected_outputs = list_connected_outputs (self, &total_w, &total_h, &used_w, &used_h);
   GnomeRROutputInfo *output = g_list_nth_data (connected_outputs, i);
   PangoLayout *layout = get_display_name (self, output);
   PangoRectangle ink_extent, log_extent;
@@ -2722,7 +2763,7 @@ paint_output (CcDisplayPanel *self, cairo_t *cr, int i)
   cairo_save (cr);
 
   foo_scroll_area_get_viewport (FOO_SCROLL_AREA (self->priv->area), &viewport);
-  get_geometry (self, output, &w, &h);
+  get_geometry (self, output, NULL, NULL, &w, &h);
 
 #if 0
   g_printerr ("%s (%p) geometry %d %d %.2f primary=%d\n",
@@ -2737,8 +2778,8 @@ paint_output (CcDisplayPanel *self, cairo_t *cr, int i)
   viewport.width -= 2 * MARGIN;
 
   get_scaled_geometry (self, output, &output_x, &output_y, NULL, NULL);
-  x = output_x * scale + MARGIN + (viewport.width - total_w * scale) / 2.0;
-  y = output_y * scale + MARGIN + (viewport.height - total_h * scale) / 2.0;
+  x = output_x * scale + MARGIN + (viewport.width - used_w * scale) / 2.0;
+  y = output_y * scale + MARGIN + (viewport.height - used_h * scale) / 2.0;
 
 #if 0
   g_printerr ("scaled: %f %f\n", x, y);
@@ -2856,7 +2897,7 @@ on_area_paint (FooScrollArea  *area,
   if (!self->priv->current_configuration)
     return;
 
-  connected_outputs = list_connected_outputs (self, NULL, NULL);
+  connected_outputs = list_connected_outputs (self, NULL, NULL, NULL, NULL);
 
   for (list = connected_outputs; list != NULL; list = list->next)
     {
@@ -3364,6 +3405,52 @@ on_detect_displays (GtkWidget *widget, gpointer data)
   cc_rr_labeler_show (self->priv->labeler);
 }
 
+static void
+delete_config_complete (GObject      *source,
+                        GAsyncResult *res,
+                        gpointer      user_data)
+{
+    GError *error = NULL;
+
+    if (!g_file_delete_finish (G_FILE (source), res, &error)) {
+      if (error) {
+        if (error->code != G_IO_ERROR_NOT_FOUND) {
+          g_critical ("Could not remove ~/.config/cinnamon-monitors.xml: %s", error->message);
+        }
+
+        g_error_free (error);
+      }
+
+      return;
+    }
+
+    /* We deleted the configuration file. We start an instance of csd-xrandr solely
+     * for the purpose of getting a default 'safe' configuration applied to the system
+     * without having to log out and back in. The original instance of csd-xrandr will
+     * remain running after this exits. */
+    if (!g_spawn_command_line_async ("csd-xrandr --exit-time 5", &error)) {
+      g_critical ("Could not apply default configuration. You should log out and back in: %s",
+                  error->message);
+      g_error_free (error);
+    }
+}
+
+static void
+reset_to_defaults (CcDisplayPanel *self)
+{
+    gchar *path = g_build_filename (g_get_user_config_dir (), "cinnamon-monitors.xml", NULL);
+    GFile *xml = g_file_new_for_path (path);
+    g_free (path);
+
+    g_file_delete_async (xml,
+                         G_PRIORITY_DEFAULT,
+                         NULL,
+                         (GAsyncReadyCallback) (delete_config_complete),
+                         self);
+
+    g_object_unref (xml);
+}
+
 static GnomeRROutputInfo *
 get_nearest_output (CcDisplayPanel *self, GnomeRRConfig *configuration, int x, int y)
 {
@@ -3645,6 +3732,9 @@ cc_display_panel_constructor (GType                  gtype,
 
   g_signal_connect_swapped (WID ("apply_button"),
                             "clicked", G_CALLBACK (apply), self);
+
+  g_signal_connect_swapped (WID ("reset_button"),
+                            "clicked", G_CALLBACK (reset_to_defaults), self);
 
   gtk_widget_show (self->priv->panel);
   gtk_container_add (GTK_CONTAINER (self), self->priv->panel);
