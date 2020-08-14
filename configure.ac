@@ -1,4 +1,4 @@
-m4_define([cinnamon_control_center_version], 4.6.1)
+m4_define([cinnamon_control_center_version], 4.6.2)
 AC_INIT([cinnamon-control-center], [cinnamon_control_center_version],
         [https://github.com/linuxmint/cinnamon-control-center/issues])
 
@@ -94,7 +94,7 @@ PKG_CHECK_MODULES(LIBSHORTCUTS, $COMMON_MODULES x11)
 PKG_CHECK_MODULES(SHELL, $COMMON_MODULES libcinnamon-menu-3.0 gio-unix-2.0 x11)
 PKG_CHECK_MODULES(BACKGROUND_PANEL, $COMMON_MODULES libxml-2.0 cinnamon-desktop
                   gdk-pixbuf-2.0 >= $GDKPIXBUF_REQUIRED_VERSION)
-PKG_CHECK_MODULES(DATETIME_PANEL, $COMMON_MODULES dbus-glib-1
+PKG_CHECK_MODULES(DATETIME_PANEL, $COMMON_MODULES
                   polkit-gobject-1 >= $POLKIT_REQUIRED_VERSION
                   gdk-pixbuf-2.0 >= $GDKPIXBUF_REQUIRED_VERSION)
 PKG_CHECK_MODULES(DISPLAY_PANEL, $COMMON_MODULES cinnamon-desktop x11)
