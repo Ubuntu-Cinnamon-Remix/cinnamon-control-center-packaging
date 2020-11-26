@@ -10,7 +10,7 @@ Uploaders:
 Build-Depends:
  meson,
  cinnamon-settings-daemon-dev,
- debhelper-compat (= 11),
+ debhelper-compat (= 13),
  gnome-pkg-tools (>= 0.10),
  gtk-doc-tools,
  intltool (>= 0.37.1),

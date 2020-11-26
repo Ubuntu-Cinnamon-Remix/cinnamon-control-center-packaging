@@ -20,9 +20,6 @@ override_dh_auto_test:
 override_dh_strip:
 	dh_strip --dbgsym-migration='cinnamon-control-center-dbg (<< 3.0.0-1~)' || dh_strip
 
-override_dh_install:
-	dh_install --list-missing
-
 override_dh_installchangelogs:
 	# Only install the changelog in the arch:all package
 	dh_installchangelogs -i ChangeLog
