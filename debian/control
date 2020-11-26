@@ -8,8 +8,7 @@ Uploaders:
  Fabio Fantoni <fantonifabio@tiscali.it>,
  Norbert Preining <norbert@preining.info>
 Build-Depends:
- autoconf-archive,
- automake,
+ meson,
  cinnamon-settings-daemon-dev,
  debhelper-compat (= 11),
  gnome-pkg-tools (>= 0.10),
