@@ -53,7 +53,8 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 4.8~), cinnamon-core (<< 4.8~)
+Breaks: cinnamon (<< 4.8~), cinnamon-core (<< 4.8~),
+ cinnamon-control-center-goa (<< ${source:Version}),
 Recommends: cinnamon-l10n (>= 4.8), iso-codes, mesa-utils,
  cinnamon-control-center-goa
 Suggests: x11-xserver-utils
