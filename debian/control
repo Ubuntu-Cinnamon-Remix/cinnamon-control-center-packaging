@@ -44,8 +44,8 @@ Depends:
  accountsservice,
  apg,
  cinnamon-control-center-data (= ${source:Version}),
- cinnamon-desktop-data (>= 4.6),
- cinnamon-settings-daemon (>= 4.6),
+ cinnamon-desktop-data (>= 4.8),
+ cinnamon-settings-daemon (>= 4.8),
  desktop-file-utils,
  gettext,
  libcinnamon-control-center1 (= ${binary:Version}),
@@ -53,8 +53,8 @@ Depends:
  xdg-utils,
  ${misc:Depends},
  ${shlibs:Depends},
-Breaks: cinnamon (<< 4.6~), cinnamon-core (<< 4.6~)
-Recommends: cinnamon-l10n (>= 4.6), iso-codes, mesa-utils,
+Breaks: cinnamon (<< 4.8~), cinnamon-core (<< 4.8~)
+Recommends: cinnamon-l10n (>= 4.8), iso-codes, mesa-utils,
  cinnamon-control-center-goa
 Suggests: x11-xserver-utils
 Description: configuration applets for the Cinnamon desktop
@@ -70,8 +70,8 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
 Breaks: 
- cinnamon (<< 4.6~),
- cinnamon-core (<< 4.6~),
+ cinnamon (<< 4.8~),
+ cinnamon-core (<< 4.8~),
  cinnamon-control-center (<< ${source:Version})
 Replaces: cinnamon-control-center (<< ${source:Version})
 Description: configuration applets for the Cinnamon desktop - Gnome Online Account

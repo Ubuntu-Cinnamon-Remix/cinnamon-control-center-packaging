@@ -4,6 +4,7 @@ cinnamon-control-center (4.8.0-1~) UNRELEASED; urgency=medium
   * remove patches for build system, upstream uses meson
   * update list of installed files
   * use debhelper compat 13
+  * Bump deps/breaks of inter-cinnamon deps to 4.8
 
  -- Norbert Preining <norbert@preining.info>  Mon, 30 Nov 2020 05:33:07 +0900
 
