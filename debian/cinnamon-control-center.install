@@ -2,7 +2,6 @@ usr/bin/cinnamon-control-center
 usr/lib/*/cinnamon-control-center-1/panels/libcolor.so
 usr/lib/*/cinnamon-control-center-1/panels/libdisplay.so
 usr/lib/*/cinnamon-control-center-1/panels/libnetwork.so
-usr/lib/*/cinnamon-control-center-1/panels/libonline-accounts.so
 usr/lib/*/cinnamon-control-center-1/panels/libregion.so
 usr/lib/*/cinnamon-control-center-1/panels/libwacom-properties.so
 usr/share/applications/cinnamon-*-panel.desktop
