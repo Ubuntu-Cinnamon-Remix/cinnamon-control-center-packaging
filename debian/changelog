@@ -1,4 +1,4 @@
-cinnamon-control-center (4.8.0-1~) UNRELEASED; urgency=medium
+cinnamon-control-center (4.8.0-1) experimental; urgency=medium
 
   * New upstream version 4.8.0
   * remove patches for build system, upstream uses meson
@@ -6,7 +6,7 @@ cinnamon-control-center (4.8.0-1~) UNRELEASED; urgency=medium
   * use debhelper compat 13
   * Bump deps/breaks of inter-cinnamon deps to 4.8
 
- -- Norbert Preining <norbert@preining.info>  Mon, 30 Nov 2020 05:33:07 +0900
+ -- Norbert Preining <norbert@preining.info>  Tue, 01 Dec 2020 08:27:37 +0900
 
 cinnamon-control-center (4.6.2-2) unstable; urgency=medium
 
