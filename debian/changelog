@@ -1,3 +1,9 @@
+cinnamon-control-center (4.8.2-1) unstable; urgency=medium
+
+  * New upstream version 4.8.2
+
+ -- Norbert Preining <norbert@preining.info>  Sun, 03 Jan 2021 06:31:01 +0900
+
 cinnamon-control-center (4.8.1-2) unstable; urgency=medium
 
   * Release to unstable.
