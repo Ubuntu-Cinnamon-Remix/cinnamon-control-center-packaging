@@ -1,3 +1,4 @@
 usr/share/cinnamon-control-center
 usr/share/icons/*/*/*/cinnamon-preferences-*
 usr/share/icons/*/*/*/cs-online-accounts.png
+usr/share/glib-2.0/schemas
