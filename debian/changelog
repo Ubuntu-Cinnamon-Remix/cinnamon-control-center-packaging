@@ -1,3 +1,11 @@
+cinnamon-control-center (5.0.1-1) experimental; urgency=medium
+
+  * New upstream version 5.0.1
+  * Add myself as Uploader
+  * ccc-data: Ensure we install glib schemas
+
+ -- Joshua Peisach <itzswirlz2020@outlook.com>  Sat, 12 Jun 2021 12:47:47 -0400
+
 cinnamon-control-center (4.8.2-1) unstable; urgency=medium
 
   * New upstream version 4.8.2
